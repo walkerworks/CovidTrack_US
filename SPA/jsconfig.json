@@ -1,0 +1,35 @@
+{
+    // this helps VS Code with intellisense
+    "compilerOptions": {
+        // Some options based on https://devblogs.microsoft.com/typescript/typescript-and-babel-7/
+
+        // Target latest version of ECMAScript.
+        "target": "esnext",
+
+        // "module": "commonjs"
+
+        // Don't emit; allow Babel to transform files.
+        "noEmit": true,
+
+        // Enable strictest settings like strictNullChecks & noImplicitAny.
+        "strict": false,
+
+        // this has to match to the webpack resolve aliases
+        // in build/webpack.cnnfig.dev.js for intellisense to work for
+        // webpack imports
+        "baseUrl": ".",
+
+        "paths": {
+            "~/*": ["./src/*"],
+        },
+
+        "moduleResolution": "Node",
+
+        // as per PouchDB docs: 
+        // https://pouchdb.com/guides/setup-pouchdb.html#typescript
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "./src/**/*"
+    ],
+}

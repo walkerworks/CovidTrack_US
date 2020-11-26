@@ -1,0 +1,61 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+    @if (ViewData["covidTrackUser"] != null)
+    {
+        @:window.covidTrackUser = @ViewData["covidTrackUser"];
+    }
+    </script>
+
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content: blob:">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#2196f3">
+    <meta name="format-detection" content="telephone=no">
+
+
+    @if (ViewData["manifestFile"] != null)
+    {
+    <link rel="manifest" id="manifest" href="@ViewData["manifestFile"]">
+    }
+
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <title>@ViewData["title"]</title>
+    @if (ViewData["appCssFile"] != null)
+    {
+    <link href="@ViewData["appCssFile"]" rel="stylesheet">
+    }
+</head>
+<body>
+    <div id="app"></div>
+    @if (ViewData["appJsFile"] != null)
+    {
+        <script type="text/javascript" src="@ViewData["appJsFile"]"></script>
+    }
+    else
+    {
+        <div id="maintenance">
+            <h1>@ViewData["title"]</h1>
+            <h2>Under Maintenance</h2>
+            <p>This app is under maintenance, please return shortly.</p>
+            <div class="footer">&copy; @DateTime.Now.Year <a href="/">CovidTrack.us</a></div>
+        </div>
+    }
+    <noscript>
+        <div id="noscript">
+            <h1>@ViewData["title"]</h1>
+            <h2>JavaScript Required</h2>
+            <p>We're sorry but this page requires JavaScript.</p>
+            <p>Please enable JavaScript to continue, or return in another web browser.</p>
+            <p class="footer">&copy; @DateTime.Now.Year <a href="/">CovidTrack.us</a></p>
+        </div>
+    </noscript>
+</body>
+</html>

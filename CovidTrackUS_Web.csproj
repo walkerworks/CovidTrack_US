@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>CovidTrackUS</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="CovidTrackUS_Core\**" />
+    <Compile Remove="CovidTrackUS_Jobs\**" />
+    <Compile Remove="SPA\**" />
+    <Content Remove="CovidTrackUS_Core\**" />
+    <Content Remove="CovidTrackUS_Jobs\**" />
+    <Content Remove="SPA\**" />
+    <EmbeddedResource Remove="CovidTrackUS_Core\**" />
+    <EmbeddedResource Remove="CovidTrackUS_Jobs\**" />
+    <EmbeddedResource Remove="SPA\**" />
+    <None Remove="CovidTrackUS_Core\**" />
+    <None Remove="CovidTrackUS_Jobs\**" />
+    <None Remove="SPA\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.9" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\i\eye.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="CovidTrackUS_Core\CovidTrackUS_Core.csproj" />
+  </ItemGroup>
+
+</Project>
