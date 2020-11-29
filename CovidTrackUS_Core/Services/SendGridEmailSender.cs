@@ -82,7 +82,7 @@ namespace CovidTrackUS_Core.Services
             parameters.NOTIFICATIONS = data.Where(d => d.ActiveCases.HasValue).Select(d => new
             {
                 COUNTY_NAME = d.Name.Replace(" County",""),
-                STATE_NAME = d.State,
+                STATE_NAME = d.StateAbbreviation,
                 ACTIVE_CASES_PER_MILLION = d.ActiveCasesTodayPerMillion.HasValue ? d.ActiveCasesTodayPerMillion.Value.ToString("N0") : null,
                 PERCENT_CHANGE = d.PastWeekPercentChange.HasValue ? County.IncreaseOrDecreaseBlurb(d.PastWeekPercentChange) : null
             });

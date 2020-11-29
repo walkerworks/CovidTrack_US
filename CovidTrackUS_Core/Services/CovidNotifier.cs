@@ -111,7 +111,7 @@ namespace CovidTrackUS_Core.Services
                         foreach (var cs in group)
                         {
                             smsBuilder.AppendLine();
-                            smsBuilder.Append($"{cs.County.Name.Replace(" County","")}, {cs.County.State}:");
+                            smsBuilder.Append($"{cs.County.Name.Replace(" County","")}, {cs.County.StateAbbreviation}:");
                             if (cs.County.ActiveCasesTodayPerMillion.HasValue)
                             {
                                 smsBuilder.Append($" {cs.County.ActiveCasesTodayPerMillion.Value.ToString("N0")}");
