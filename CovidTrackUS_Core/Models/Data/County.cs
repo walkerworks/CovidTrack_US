@@ -33,6 +33,14 @@ namespace CovidTrackUS_Core.Models.Data
         public double? ActiveCases { get; set; }
 
         /// <summary>
+        /// The active cases yesterday
+        /// </summary>
+        /// <remarks>
+        /// This is actually data from 2 days ago.
+        /// </remarks>
+        public double? ActiveCasesYesterday { get; set; }
+
+        /// <summary>
         /// The active cases as of a week ago today
         /// </summary>
         /// <remarks>
@@ -99,6 +107,22 @@ namespace CovidTrackUS_Core.Models.Data
                     return null;
                 }
                 return ((ActiveCases - ActiveCasesLastWeek) / ActiveCasesLastWeek) * 100;
+            }
+        }
+
+        /// <summary>
+        /// Active case percentage change from yesterday
+        /// </summary>
+        [Computed]
+        public double? YesterdayPercentChange
+        {
+            get
+            {
+                if (!ActiveCases.HasValue || !ActiveCasesYesterday.HasValue || ActiveCasesYesterday == 0)
+                {
+                    return null;
+                }
+                return ((ActiveCases - ActiveCasesYesterday) / ActiveCasesYesterday) * 100;
             }
         }
 

@@ -107,18 +107,18 @@ namespace CovidTrackUS_Core.Services
                     foreach (var group in SMSSubscriptionsDue)
                     {
                         smsBuilder.Clear();
-                        smsBuilder.AppendLine($"{today} - Estimated active cases (per million) and % change since last week");
+                        smsBuilder.AppendLine($"{today} - Est. active cases (per million), % change last week, % change yesterday");
                         foreach (var cs in group)
                         {
                             smsBuilder.AppendLine();
                             smsBuilder.Append($"{cs.County.Name.Replace(" County","")}, {cs.County.StateAbbreviation}:");
                             if (cs.County.ActiveCasesTodayPerMillion.HasValue)
                             {
-                                smsBuilder.Append($" {cs.County.ActiveCasesTodayPerMillion.Value.ToString("N0")}");
+                                smsBuilder.Append($" {cs.County.ActiveCasesTodayPerMillion.Value.ToString("N0")},");
                             }
                             if (cs.County.PastWeekPercentChange.HasValue)
                             {
-                                smsBuilder.Append($" {County.IncreaseOrDecreaseBlurb(cs.County.PastWeekPercentChange)} {Environment.NewLine}");
+                                smsBuilder.Append($" {County.IncreaseOrDecreaseBlurb(cs.County.PastWeekPercentChange)}, {County.IncreaseOrDecreaseBlurb(cs.County.YesterdayPercentChange)} {Environment.NewLine}");
                             }
                         }
                         smsBuilder.AppendLine();

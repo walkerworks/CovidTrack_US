@@ -84,7 +84,8 @@ namespace CovidTrackUS_Core.Services
                 COUNTY_NAME = d.Name.Replace(" County",""),
                 STATE_NAME = d.StateAbbreviation,
                 ACTIVE_CASES_PER_MILLION = d.ActiveCasesTodayPerMillion.HasValue ? d.ActiveCasesTodayPerMillion.Value.ToString("N0") : null,
-                PERCENT_CHANGE = d.PastWeekPercentChange.HasValue ? County.IncreaseOrDecreaseBlurb(d.PastWeekPercentChange) : null
+                PERCENT_CHANGE_WEEK = d.PastWeekPercentChange.HasValue ? County.IncreaseOrDecreaseBlurb(d.PastWeekPercentChange) : null,
+                PERCENT_CHANGE_DAY = d.YesterdayPercentChange.HasValue ? County.IncreaseOrDecreaseBlurb(d.YesterdayPercentChange) : null,
             });
             return parameters;
         }

@@ -243,6 +243,7 @@ namespace CovidTrackUS_Core.Services
                         // Update Active Cases Data
                         if (countyToUpdate != null)
                         {
+                            countyToUpdate.ActiveCasesYesterday = countyToUpdate.ActiveCases;
                             countyToUpdate.ActiveCases = finalData.Rows[i].Field<double>("Active Cases");
                             countyToUpdate.ActiveCasesLastWeek = finalData.Rows[i].Field<double>("Last Week Active Cases");
                             countyToUpdate.LastUpdated = DateTime.Now;
