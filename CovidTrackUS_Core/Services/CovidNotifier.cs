@@ -107,7 +107,7 @@ namespace CovidTrackUS_Core.Services
                     foreach (var group in SMSSubscriptionsDue)
                     {
                         smsBuilder.Clear();
-                        smsBuilder.AppendLine($"{today} - Est. active cases (per million), % change last week, % change yesterday");
+                        smsBuilder.AppendLine($"Est. active cases (per million) and % change since last week / two days ago ");
                         foreach (var cs in group)
                         {
                             smsBuilder.AppendLine();
@@ -118,11 +118,12 @@ namespace CovidTrackUS_Core.Services
                             }
                             if (cs.County.PastWeekPercentChange.HasValue)
                             {
-                                smsBuilder.Append($" {County.IncreaseOrDecreaseBlurb(cs.County.PastWeekPercentChange)}, {County.IncreaseOrDecreaseBlurb(cs.County.YesterdayPercentChange)} {Environment.NewLine}");
+                                smsBuilder.Append($" {County.IncreaseOrDecreaseBlurb(cs.County.PastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.County.YesterdayPercentChange)} {Environment.NewLine}");
                             }
                         }
                         smsBuilder.AppendLine();
-                        smsBuilder.AppendLine("Map: https://bit.ly/2KwG88x");
+                        smsBuilder.AppendLine("Resources: https://bit.ly/2KwG88x");
+                        smsBuilder.AppendLine("Heat map: https://bit.ly/3muqA3j");
                         smsBuilder.AppendLine($"Manage: {ourLink}");
                         if (await _smsService.SendMessage(group.Key.Handle, smsBuilder.ToString()))
                         {

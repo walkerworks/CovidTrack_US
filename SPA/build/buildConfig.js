@@ -55,7 +55,7 @@ module.exports = function(options) {
       allowedHosts: ['.covid-track.us'],
       disableHostCheck: true,
       https: {
-        pfx: fs.readFileSync('../../loc.covid-track.us.pfx'),
+        pfx: fs.readFileSync('../../KBX/loc.covid-track.us.pfx'),
         passphrase: CTUS_PASSPHRASE
       },
       stats: { // reduces verbosity of output
