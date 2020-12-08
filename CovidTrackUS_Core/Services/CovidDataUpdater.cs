@@ -31,8 +31,9 @@ namespace CovidTrackUS_Core.Services
         }
 
         private const string JHUDataURI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv";
-        private const string NYHealthDataURI = "https://health.data.ny.gov/resource/xdss-u53e.json";
-        private readonly double factor = 2.4;
+        //private const string NYHealthDataURI = "https://health.data.ny.gov/resource/xdss-u53e.json";
+        private const string NYTimesDataURI = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv";
+        private const double UndetectedFactor = 2.4;
 
         /* Values obtained from our gamma distribution equal to
         1 - CDF for the first 30 integer values of x */
@@ -43,25 +44,7 @@ namespace CovidTrackUS_Core.Services
                             0.11082822, 0.09268291, 0.077402, 0.06456005, 0.0537877,
                             0.04476636, 0.03722264, 0.03092299, 0.02566868, 0.02129114,
                             0.0176478, 0.01461838, 0.01210161, 0.01001242, 0.00827947};
-
-        Dictionary<string, string> _NYCFIPS;
-        private Dictionary<string, string> NYCFIPS
-        {
-            get
-            {
-                if(_NYCFIPS == null)
-                {
-                    _NYCFIPS = new Dictionary<string, string>();
-                    _NYCFIPS.Add("Bronx", "36005");
-                    _NYCFIPS.Add("Kings", "36047");
-                    _NYCFIPS.Add("New York", "36061");
-                    _NYCFIPS.Add("Queens", "36081");
-                    _NYCFIPS.Add("Richmond", "36085");
-                }
-                return _NYCFIPS;
-            }
-        }
-
+        string[] _MAISLANDFIPS = new string[] { "25019", "25007" };
         public async Task RetrieveAndCrunch(ILogger log)
         {
             DataTable finalData;
@@ -116,7 +99,7 @@ namespace CovidTrackUS_Core.Services
                 // 30 columns back from last week's index (for 30 days of dates) for calculating last week's active cases
                 var ix_30DaysFromLastWeek = ix_lastWeek - 29;
 
-                /* Hang on to the dates for hitting the NYC Data API */
+                /* Hang on to the dates for hitting parsing NYTimes MA Data */
                 /* Active Cases This week Dates */
                 var casesAMonthAgo = DateTime.Parse(finalData.Columns[ix_30DaysAgo].ColumnName).Date;
                 var casesYesterday = DateTime.Parse(finalData.Columns[ix_Yesterday].ColumnName).Date.AddDays(1).AddSeconds(-1);
@@ -149,13 +132,15 @@ namespace CovidTrackUS_Core.Services
                         /* Calc active case difference from the day before */
                         var prevDay = int.Parse(finalData.Rows[i].Field<string>(j - 1));
                         var currDay = int.Parse(finalData.Rows[i].Field<string>(j));
+                        prevDay = prevDay < 0 ? 0 : prevDay;
+                        currDay = currDay < 0 ? 0 : currDay;
                         var diff = currDay - prevDay;
                         /* Multiply by the proper gamma val and add to the county active case sum */
                         countySum += (diff * gamma[gammaIndex]);
                         gammaIndex--;
                     }
                     // update the Active cases column for the county row (multiple sum by factor)
-                    finalData.Rows[i].SetField("Active Cases", (countySum < 0 ? 0 : countySum) * factor);
+                    finalData.Rows[i].SetField("Active Cases", (countySum < 0 ? 0 : countySum) * UndetectedFactor);
                 }
                 log.LogInformation($"- done...");
                 log.LogInformation($"Calculating Last Week's Active Cases (non-NYC)");
@@ -171,13 +156,15 @@ namespace CovidTrackUS_Core.Services
                         /* Calc active case difference from the day before */
                         var prevDay = int.Parse(finalData.Rows[i].Field<string>(j - 1));
                         var currDay = int.Parse(finalData.Rows[i].Field<string>(j));
+                        prevDay = prevDay < 0 ? 0 : prevDay;
+                        currDay = currDay < 0 ? 0 : currDay;
                         var diff = currDay - prevDay;
                         /* Multiply by the proper gamma val and add to the county active case sum */
                         countySum += (diff * gamma[gammaIndex]);
                         gammaIndex--;
                     }
                     // update the Last Week Active Cases column for the county row (multiple sum by factor)
-                    finalData.Rows[i].SetField("Last Week Active Cases", (countySum < 0 ? 0 : countySum) * factor);
+                    finalData.Rows[i].SetField("Last Week Active Cases", (countySum < 0 ? 0 : countySum) * UndetectedFactor);
                 }
                 log.LogInformation($"- done...");
                 // Keep only the columns we need
@@ -193,36 +180,36 @@ namespace CovidTrackUS_Core.Services
                 // Make FIPS Column the primary lookup key
                 finalData.PrimaryKey = new[] { finalData.Columns["FIPS"] };
 
-                log.LogInformation($"Downloading Active Case NYC Data from {NYHealthDataURI}");
+                log.LogInformation($"Downloading Active Case Dukes/Nantucket MA Data from {NYTimesDataURI}");
                 sw.Restart();
-                //Download Borough Data in JSON from City of New York with soQL query
-                string soQL = @$"query=SELECT test_date,county,new_positives WHERE 
-                    (county='Bronx' OR county='Richmond' OR county='New York' OR county='Kings' OR county='Queens') 
-                    AND 
-                    (test_date between '{casesAMonthAgo.ToString("s", System.Globalization.CultureInfo.InvariantCulture)}' and '{casesYesterday.ToString("s", System.Globalization.CultureInfo.InvariantCulture)}')";
-                var nyData = await client.DownloadStringTaskAsync(new Uri($"{NYHealthDataURI}?${soQL}"));
+                //Downloading Active Case Dukes/Nantucket MA CSV Data from NYTimes
+                var maIslandData = await client.DownloadStringTaskAsync(new Uri(NYTimesDataURI));
                 sw.Stop();
-                log.LogInformation($"Downloaded {nyData.Length} Rows in {sw.ElapsedMilliseconds} ms");
-                // Convert to objects from JSON
-                NYCCovidData[] typedNYData = (NYCCovidData[])JsonConvert.DeserializeObject(nyData, typeof(NYCCovidData[]));
-                log.LogInformation($"Calculating Active Cases (NYC)");
-                IterateOverBoroughData(typedNYData, finalData, "Active Cases");
+                log.LogInformation($"Downloaded {maIslandData.Length} Rows in {sw.ElapsedMilliseconds} ms");
+                List<NYTCovidData> typedNYTData = new List<NYTCovidData>();
+                using (TextReader tr = new StringReader(maIslandData)) {
+                    var csvr = new CsvReader(tr,true);
+                    string fips;
+                    int dateIndex = 0;
+                    int countyIndex = 1;
+                    int fipsIndex = 3;
+                    int casesIndex = 4;
+                    while (csvr.ReadNextRecord())
+                    {
+                        fips = csvr[fipsIndex];
+                        if (!string.IsNullOrEmpty(fips) && _MAISLANDFIPS.Contains(fips))
+                        {
+                            typedNYTData.Add(new NYTCovidData() { date = DateTime.Parse(csvr[dateIndex]), county = csvr[countyIndex], fips = fips, cases = int.Parse(csvr[casesIndex]) });
+                        }
+                    }
+                }
+                
+                log.LogInformation($"Calculating Active Cases (MA Islands)");
+                IterateOverMaIslandData(typedNYTData.Where(d => d.date >= casesAMonthAgo && d.date <= casesYesterday), finalData, "Active Cases");
                 log.LogInformation($"- done...");
 
-                log.LogInformation($"Downloading Last Week's Active Case NYC Data from {NYHealthDataURI}");
-                sw.Restart();
-                //Download Borough Data in JSON from City of New York with soQL query
-                soQL = @$"query=SELECT test_date,county,new_positives WHERE 
-                    (county='Bronx' OR county='Richmond' OR county='New York' OR county='Kings' OR county='Queens') 
-                    AND 
-                    (test_date between '{casesAMonthAgoLastWeek.ToString("s", System.Globalization.CultureInfo.InvariantCulture)}' and '{casesLastWeek.ToString("s", System.Globalization.CultureInfo.InvariantCulture)}')";
-                nyData = await client.DownloadStringTaskAsync(new Uri($"{NYHealthDataURI}?${soQL}"));
-                sw.Stop();
-                log.LogInformation($"Downloaded {nyData.Length} Rows in {sw.ElapsedMilliseconds} ms");
-                // Convert to objects from JSON
-                typedNYData = (NYCCovidData[])JsonConvert.DeserializeObject(nyData, typeof(NYCCovidData[]));
-                log.LogInformation($"Calculating Last Week's Active Cases (NYC)");
-                IterateOverBoroughData(typedNYData, finalData, "Last Week Active Cases");
+                log.LogInformation($"Calculating Active Cases Last Week (MA Islands)");
+                IterateOverMaIslandData(typedNYTData.Where(d => d.date >= casesAMonthAgoLastWeek && d.date <= casesLastWeek), finalData, "Last Week Active Cases");
                 log.LogInformation($"- done...");
 
                 var batchUpdateTime = DateTime.Now;
@@ -252,10 +239,10 @@ namespace CovidTrackUS_Core.Services
                 log.LogInformation($"Finished in {sw.ElapsedMilliseconds} ms");
             }
         }
-        private void IterateOverBoroughData(NYCCovidData[] typedNYData, DataTable finalData, string columnToUpdate)
+        private void IterateOverMaIslandData(IEnumerable<NYTCovidData> typedNYTData, DataTable finalData, string columnToUpdate)
         {
-            //Iterate over Borough data grouped by County and do the same calculations as before (gamma and factor)
-            foreach (var grouping in typedNYData.GroupBy(d => d.county))
+            //Iterate over island data grouped by County and do the same calculations as before (gamma and factor)
+            foreach (var grouping in typedNYTData.GroupBy(d => d.fips))
             {
                 // Reset controls for this county
                 var gammaIndex = 29;
@@ -265,17 +252,17 @@ namespace CovidTrackUS_Core.Services
                 {
                     if (prevDay >= 0)
                     {
-                        var currDay = group.new_positives;
+                        var currDay = group.cases;
                         var diff = currDay - prevDay;
                         /* Multiply by the proper gamma val and add to the county active case sum */
                         countySum += (diff * gamma[gammaIndex]);
                         gammaIndex--;
                     }
                     /* Set prevDay value to this for the next iteration */
-                    prevDay = group.new_positives;
+                    prevDay = group.cases;
                 }
-                var updateRow = finalData.Rows.Find(NYCFIPS[grouping.Key]);
-                updateRow.SetField<double>(columnToUpdate, countySum * factor);
+                var updateRow = finalData.Rows.Find(grouping.Key);
+                updateRow.SetField(columnToUpdate, countySum * UndetectedFactor);
             }
         }
 

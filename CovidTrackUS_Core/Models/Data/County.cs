@@ -133,9 +133,11 @@ namespace CovidTrackUS_Core.Models.Data
         {
             if (!val.HasValue)
                 return "";
-            if (val.Value > 0 || val.Value < 0)
-                return $"{(val.Value > 0 ? "+" : "-")}{Math.Round(Math.Abs(val.Value)).ToString("N0")}%";
-            return "";
+            var displayVal = Math.Round(Math.Abs(val.Value));
+            if (displayVal == 0)
+                return "0%";
+
+            return $"{(displayVal > 0 ? "+" : "-")}{displayVal:N0}%";
         }
 
         /// <summary>
