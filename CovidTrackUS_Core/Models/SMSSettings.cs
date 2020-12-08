@@ -35,24 +35,24 @@ namespace CovidTrackUS_Core.Models
         public string Host { get; set; }
 
         /// <summary>
-        /// Short link to https://loc.covid-watch.us/
+        /// Short link to https://loc.covidtrack.us/
         /// </summary>
         public string LocalShortLink
         {
             get
             {
-                return "https://bit.ly/2UYQ24M";
+                return "https://bit.ly/3qEirMg";
             }
         }
 
         /// <summary>
-        /// Short link to https://covid-watch.us/
+        /// Short link to https://covid-track.us/
         /// </summary>
         public string ShortLink
         {
             get
             {
-                return "https://bit.ly/2J5T84D";
+                return "https://bit.ly/3gsScDC";
             }
         }
     }
