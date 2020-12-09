@@ -1,6 +1,5 @@
 <template>
   <div>
-        <p class="text-uppercase subtitle-2">Feedback</p>
         <v-container>
           <v-row>
             <v-col>

@@ -15,18 +15,21 @@ const router = new Router({
     {
       path: '/',
       name: 'Home',
-      component: Home
+      component: Home,
+      meta: 'Sign up / Log in',
     },
     {
       path: '/counties',
       name: 'Counties',
-      component: Counties
+      component: Counties,
+      meta: 'County Selection & Notification Frequency',
     },
     {
       path: '/feedback/:feedbackId/:subscriberId',
       name: 'Feedback',
       component: Feedback,
-      props:true
+      props:true,
+      meta: 'Feedback',
     },
   ]
 });

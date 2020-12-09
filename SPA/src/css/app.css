@@ -59,16 +59,96 @@
     text-decoration: none;
   }
 
-  .headerbar h2 {white-space: nowrap;}
+  .headerbar h2 {
+    white-space: nowrap;
+    display: inline-block;
+    color:#fff;
+    font-size:27px;
+    vertical-align: middle;
+    line-height: 1em;
+    margin-left:10px
+  }
+  .headerbar .v-icon.v-icon {
+    display: inline;
+    line-height: inherit;
+    font-size:28px;
+    color:#9B9B9B;
+  }
+  .container.breadcrumb {
+    max-width: 100%;
+    padding:8px 12px;
+    margin: 0;
+    background-color: #9B9B9B;
+    color: #000;
+    height: 35px;
+    font-size:1em;
+  }
+  .container.breadcrumb .container {
+    padding:0;
+  }
+.v-sheet.v-app-bar.v-toolbar:not(.v-sheet--outlined) {
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
+}
+
+.theme--light header.v-app-bar.v-toolbar.v-sheet > div {
+    background-color: #002041;
+}
+
+#app .v-text-field>.v-input__control>.v-input__slot {
+  background-color: #DFDFDF;
+  padding:15px;
+}
+.v-text-field>.v-input__control>.v-input__slot:after, .v-text-field>.v-input__control>.v-input__slot:before {
+  border:none !important;
+}
+
+.v-input .v-label {
+  height: 30px;
+  line-height: 30px;
+  width:100%;
+  text-align: center;
+}
+#app .v-text-field .v-label {
+   overflow: inherit;
+   text-overflow: inherit;
+   max-width:inherit;
+}
+#app .v-text-field.v-input--is-focused .v-label {
+  width:100%;
+  text-align: left;
+}
+#app .v-btn {
+  border-radius: 0px;
+  width:100%;
+  background-color:#7D7D7D !important;
+  color:#fff !important;
+}
+.mdi-virus {color:#9B9B9B;}
+
+.v-main h2 {
+  line-height: 1.2em;
+}
+#app .v-application .subtitle-1 {
+  margin-top:15px;
+  font-size: 1.2rem!important;
+  line-height: 1.2em;
+}
 
 
+.theme--light.v-divider {
+    border-color: #9B9B9B;
+    border-width:2px 0 0;
+    margin:20px 0;
+}
 
 
   /* === FAB === */
  .fab {
-  right: 15px;
-  top: 75px;
+  bottom: 50px;
   position: fixed;
+  width:100%;
+  text-align: center;
+  z-index:3
 }
 
 .fab a {
@@ -78,10 +158,10 @@
   border-radius: 28px;
   -webkit-box-shadow: 0 0 0 0;
   box-shadow: 0 0 0 0;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
   -webkit-justify-content: center;
   justify-content: center;
   text-decoration: none;

@@ -2,16 +2,16 @@
   <div id="app">
     <v-app>
       <v-app-bar app class="headerbar">
-        <v-container  fill-height fluid>
+        <v-container fluid>
           <v-row no-gutters>
             <v-col class="text-left" align-self="center">
-               <h2><v-icon>mdi-virus</v-icon> Covid Tracker</h2>
+               <v-icon>mdi-virus</v-icon><h2>Covid Tracker</h2>
             </v-col>
             <v-col v-if="localUser" class="text-right" align-self="center">
               <v-icon v-popover:subscriber.left large>mdi-account-circle</v-icon>
-              <popover name="subscriber" class="subscriberPop" >
+              <popover name="subscriber" class="subscriberPop">
                 <span class="handle">{{localUser}}</span>
-                <a href="#" @click.prevent="$router.push({name: 'Counties'})">Manage <v-icon>mdi-cog</v-icon></a>
+                <a v-if="$route.name !== 'Counties'" href="#" @click.prevent="$router.push({name: 'Counties'})">Manage <v-icon>mdi-cog</v-icon></a>
                 <a href="#" @click="logoutSubscriber">Logout <v-icon color="blue">mdi-logout</v-icon></a>
               </popover>
             </v-col>
@@ -19,6 +19,11 @@
         </v-container>
       </v-app-bar>
       <v-main>
+        <v-container class="breadcrumb">
+              <v-container>
+                <p class="text-uppercase subtitle">{{$route.meta}}</p>
+              </v-container>
+        </v-container>
         <v-container>
           <router-view/>
         </v-container>

@@ -1,6 +1,5 @@
 <template>
   <div>
-        <p class="text-uppercase subtitle-2">County Selection</p>
         <v-container>
           <v-row>
             <v-col>
@@ -106,7 +105,7 @@
                     </v-card>
                   </v-dialog>
               <p class="subtitle-1">
-               <a href="#" class="removeAccount" @click.prevent="dialogAccountDelete = true"> <v-icon large>mdi-account-remove</v-icon> Unsubscribe from all alerts and remove your account?</a>
+               <a href="#" class="removeAccount red--text" @click.prevent="dialogAccountDelete = true"> <v-icon large>mdi-account-remove</v-icon> Unsubscribe and remove your account</a>
                 <p class="red--text" v-if="accountDeleteError">{{accountDeleteError}}</p>
               </p>
             </v-col>
