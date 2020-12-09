@@ -11,12 +11,11 @@ using CovidTrackUS_Core.Models;
 using CovidTrackUS_Core.Models.Data;
 using LumenWorks.Framework.IO.Csv;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 namespace CovidTrackUS_Core.Services
 {
     /// <summary>
     /// C# Rewrite of Ryan Taggard's DFR Travel Map Code python script.
-    /// https://raw.githubusercontent.com/RyanTaggard/county-status/master/DFR%20Travel%20Map%20Code.py
+    /// https://github.com/RyanTaggard/county-status/blob/master/vt_travel_map.py
     /// </summary>
     public class CovidDataUpdater : ICovidDataUpdater
     {
