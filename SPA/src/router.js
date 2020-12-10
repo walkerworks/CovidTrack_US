@@ -22,7 +22,7 @@ const router = new Router({
       path: '/counties',
       name: 'Counties',
       component: Counties,
-      meta: 'County Selection & Notification Frequency',
+      meta: 'County Selection & Notifications',
     },
     {
       path: '/feedback/:feedbackId/:subscriberId',

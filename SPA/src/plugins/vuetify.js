@@ -4,6 +4,6 @@ import 'vuetify/dist/vuetify.min.css';
 import '@mdi/font/css/materialdesignicons.css';
 Vue.use(Vuetify);
 
-const opts = {};
+const opts = {theme: { light: true }};
 
 export default new Vuetify(opts);

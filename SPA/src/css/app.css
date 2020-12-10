@@ -22,6 +22,9 @@
 .headerbar {
     background-color: #ff6b35;
   }
+  .titleAndLogo {
+    white-space: nowrap;
+  }
   .subscriberPop {
     top:10px!important;
     width: 250px !important;
@@ -72,7 +75,7 @@
     display: inline;
     line-height: inherit;
     font-size:28px;
-    color:#9B9B9B;
+    color:#fff;
   }
   .container.breadcrumb {
     max-width: 100%;
@@ -91,7 +94,7 @@
 }
 
 .theme--light header.v-app-bar.v-toolbar.v-sheet > div {
-    background-color: #002041;
+    background-color: #007155;
 }
 
 #app .v-text-field>.v-input__control>.v-input__slot {
@@ -117,7 +120,7 @@
   width:100%;
   text-align: left;
 }
-#app .v-btn {
+#app form .v-btn {
   border-radius: 0px;
   width:100%;
   background-color:#7D7D7D !important;
@@ -141,67 +144,11 @@
     margin:20px 0;
 }
 
+.v-dialog .v-card .headline {white-space: nowrap;}
 
-  /* === FAB === */
- .fab {
-  bottom: 50px;
-  position: fixed;
-  width:100%;
-  text-align: center;
-  z-index:3
-}
+#app .v-card__actions {display: inherit;text-align: center;}
 
-.fab a {
-  background: #1976d2;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  -webkit-box-shadow: 0 0 0 0;
-  box-shadow: 0 0 0 0;
-  display: -webkit-inline-box;
-  display: -webkit-inline-flex;
-  display: -ms-inline-flexbox;
-  display: inline-flex;
-  -webkit-justify-content: center;
-  justify-content: center;
-  text-decoration: none;
-  -webkit-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-  -moz-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-  -ms-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-  animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-  transition: all 300ms ease-in-out;
-}
-
-/* Animation */
-
-a.pulsingButton:hover {
-  -webkit-animation: none;
-  -moz-animation: none;
-  -ms-animation: none;
-  animation: none;
-  color: #ffffff;
-}
-
-@-webkit-keyframes pulsing {
-  to {
-    box-shadow: 0 0 0 15px rgba(232, 76, 61, 0);
-  }
-}
-
-@-moz-keyframes pulsing {
-  to {
-    box-shadow: 0 0 0 15px rgba(232, 76, 61, 0);
-  }
-}
-
-@-ms-keyframes pulsing {
-  to {
-    box-shadow: 0 0 0 15px rgba(232, 76, 61, 0);
-  }
-}
-
-@keyframes pulsing {
-  to {
-    box-shadow: 0 0 0 15px rgba(232, 76, 61, 0);
-  }
+#app .v-snack__content {  text-align: center;}
+#app .v-snack a, #app .v-snack span {
+  color: #fff !important;
 }

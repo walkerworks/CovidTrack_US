@@ -3,11 +3,6 @@
         <v-container>
           <v-row>
             <v-col>
-            <div v-if="isDirty" class="fab pulsingButton">
-              <a @click.prevent="SaveData" href="#">
-                <v-icon large color="white">mdi-content-save-all-outline</v-icon>
-              </a>
-            </div>
               <h2>Choose counties to monitor</h2>
               <p class="subtitle-1">
                 Click a state to zoom in. Select up to 5 counties for Covid-19 alerts.
@@ -29,10 +24,11 @@
                     <v-dialog v-model="dialog" max-width="500px">
                       <v-card>
                         <v-card-title>
-                          <h3>Select frequency</h3>
+                          <h3>Frequency</h3>
                         </v-card-title>
+                        <v-divider></v-divider>
                         <v-card-subtitle>
-                          <span class="subtitle-1">for <strong>{{editedItem.name}}, {{editedItem.state}}</strong> notifications</span>
+                          <span class="subtitle-1">Select frequency for <strong>{{editedItem.name}}, {{editedItem.state}}</strong> notifications</span>
                         </v-card-subtitle>
                         <v-card-text>
                           <v-container>
@@ -56,9 +52,8 @@
                           </v-container>
                         </v-card-text>
                         <v-card-actions>
-                          <v-spacer></v-spacer>
-                          <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-                          <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+                          <v-btn outlined color="primary" text @click="save">OK</v-btn>
+                          <v-btn outlined color="gray" text @click="close">Cancel</v-btn>
                         </v-card-actions>
                       </v-card>
                   </v-dialog>
@@ -66,10 +61,8 @@
                     <v-card>
                       <v-card-title class="headline">Stop following this county?</v-card-title>
                       <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-                        <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
-                        <v-spacer></v-spacer>
+                        <v-btn outlined color="primary" text @click="deleteItemConfirm">OK</v-btn>
+                        <v-btn outlined color="gray" text @click="closeDelete">Cancel</v-btn>
                       </v-card-actions>
                     </v-card>
                   </v-dialog>
@@ -105,13 +98,16 @@
                     </v-card>
                   </v-dialog>
               <p class="subtitle-1">
-               <a href="#" class="removeAccount red--text" @click.prevent="dialogAccountDelete = true"> <v-icon large>mdi-account-remove</v-icon> Unsubscribe and remove your account</a>
-                <p class="red--text" v-if="accountDeleteError">{{accountDeleteError}}</p>
+                <a href="#" class="removeAccount red--text" @click.prevent="dialogAccountDelete = true"> <v-icon large>mdi-account-remove</v-icon> Unsubscribe and remove your account</a>
+                <span class="red--text" v-if="accountDeleteError"><br/>{{accountDeleteError}}</span>
               </p>
             </v-col>
           </v-row>
         </v-container>
-
+      <v-snackbar v-model="snackbar.show" :color="snackbar.color" :vertical="vertical" :timeout="snackbar.timeout">
+        <a v-if="snackbar.mode === 'SAVE'" @click="SaveData">{{snackbar.saveText}}</a>
+        <span v-else>{{snackbar.confirmedText}}</span>
+      </v-snackbar>
   </div>
 </template>
 <style scoped>
@@ -133,7 +129,14 @@ export default {
   data() {
     return {
       data: {usa: usData, vt: vtData, ny: nyData, nh: nhData, ma: maData},
-      isDirty: false,
+      snackbar: {
+        show: false,
+        timeout: -1,
+        color: 'primary',
+        saveText: 'Tap to save your changes',
+        mode: 'SAVE',
+        confirmedText: 'Saved!'
+      },
       dialog: false,
       dialogDelete: false,
       dialogAccountDelete: false,
@@ -242,7 +245,13 @@ export default {
     selectedCounties : {
       deep: true,
       handler() {
-        this.isDirty = !this.arraysAreSame(this.selectedCounties,this.origSelectedCounties);
+        let show = !this.arraysAreSame(this.selectedCounties,this.origSelectedCounties);
+        if(show) {
+          this.snackbar.show = show;
+          this.snackbar.timeout = -1;
+          this.snackbar.color = 'primary';
+          this.snackbar.mode = 'SAVE';
+        }
       }
     },
     dialog (val) {
@@ -402,7 +411,9 @@ export default {
     async SaveData() {
       try{
         await axios.post('/api/save-counties/',this.selectedCounties);
-        this.isDirty = false;
+        this.snackbar.mode = 'CONFIRMED';
+        this.snackbar.color = 'success';
+        this.snackbar.timeout = 5000;
         this.origSelectedCounties = JSON.parse(JSON.stringify(this.selectedCounties));
       }
       catch(ex) {
