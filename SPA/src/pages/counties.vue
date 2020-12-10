@@ -247,11 +247,11 @@ export default {
       handler() {
         let show = !this.arraysAreSame(this.selectedCounties,this.origSelectedCounties);
         if(show) {
-          this.snackbar.show = show;
           this.snackbar.timeout = -1;
           this.snackbar.color = 'primary';
           this.snackbar.mode = 'SAVE';
         }
+        this.snackbar.show = show;
       }
     },
     dialog (val) {
