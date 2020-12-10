@@ -1,4 +1,4 @@
-importScripts("/track/precache-manifest.1308617d66cc31dd0599dd53b4ffbe6f.js", "https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
+importScripts("/track/precache-manifest.bc046b16d2fd3b9ca6feefc0953ec30f.js", "https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 /* eslint-disable no-undef */
 function logForSvcWorker(message) {

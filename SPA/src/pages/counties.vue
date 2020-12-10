@@ -5,7 +5,7 @@
             <v-col>
               <h2>Choose counties to monitor</h2>
               <p class="subtitle-1">
-                Click a state to zoom in. Select up to 5 counties for Covid-19 alerts.
+                Click a state to zoom in. Select up to 5 counties for COVID-19 updates.  Alerts are sent at 7:30am ET.
               </p>
               <div id="chartdiv" ref="chartdiv"></div>
             </v-col>
