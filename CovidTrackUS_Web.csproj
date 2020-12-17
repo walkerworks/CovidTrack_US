@@ -34,4 +34,8 @@
     <ProjectReference Include="CovidTrackUS_Core\CovidTrackUS_Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\kml\" />
+  </ItemGroup>
+
 </Project>

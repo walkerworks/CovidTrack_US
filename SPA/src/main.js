@@ -5,6 +5,8 @@ import router from './router';
 import globalMixins from './mixins/global-mixins';
 import vuetify from './plugins/vuetify';
 import Popover from 'vue-js-popover';
+import Modal from './components/modal';
+Vue.component('modal', Modal);
 
 Vue.use(Popover);
 Vue.mixin(globalMixins);

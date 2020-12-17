@@ -3,146 +3,77 @@
         <v-container>
           <v-row>
             <v-col>
-              <h2>Choose counties to monitor</h2>
-              <p class="subtitle-1">
-                Click a state to zoom in. Select up to 5 counties for COVID-19 updates.  Alerts are sent at 7:30am ET.
+              <p class="body-1">
+                Use the map below to select up to 5 counties. Or you may <a href="#">Add/Remove counties manually</a>.
               </p>
-              <div id="chartdiv" ref="chartdiv"></div>
+              <div id="map" ref="leafletMap"></div>
             </v-col>
           </v-row>
-          <v-row>
-            <v-col>
-              <v-data-table
-              :headers="headers"
-              :items="selectedCounties"
-              item-key="name"
-              disable-sort
-              hide-default-footer>
-              <template v-slot:top>
-                <v-toolbar flat>
-                  <v-toolbar-title>Selected Counties ({{selectedCounties.length}} of 5)</v-toolbar-title>
-                    <v-dialog v-model="dialog" max-width="500px">
-                      <v-card>
-                        <v-card-title>
-                          <h3>Frequency</h3>
-                        </v-card-title>
-                        <v-divider></v-divider>
-                        <v-card-subtitle>
-                          <span class="subtitle-1">Select frequency for <strong>{{editedItem.name}}, {{editedItem.state}}</strong> notifications</span>
-                        </v-card-subtitle>
-                        <v-card-text>
-                          <v-container>
-                              <v-radio-group v-model="editedItem.frequency">
-                                <v-radio value="Daily">
-                                  <template v-slot:label>
-                                    <div><strong>Daily</strong></div>
-                                  </template>
-                                </v-radio>
-                                <v-radio value="Weekly">
-                                  <template v-slot:label>
-                                    <div><strong>Weekly</strong></div>
-                                  </template>
-                                </v-radio>
-                                <v-radio value="Monthly">
-                                  <template v-slot:label>
-                                    <div><strong>Monthly</strong></div>
-                                  </template>
-                                </v-radio>
-                              </v-radio-group>
-                          </v-container>
-                        </v-card-text>
-                        <v-card-actions>
-                          <v-btn outlined color="primary" text @click="save">OK</v-btn>
-                          <v-btn outlined color="gray" text @click="close">Cancel</v-btn>
-                        </v-card-actions>
-                      </v-card>
-                  </v-dialog>
-                  <v-dialog v-model="dialogDelete" max-width="500px">
-                    <v-card>
-                      <v-card-title class="headline">Stop following this county?</v-card-title>
-                      <v-card-actions>
-                        <v-btn outlined color="primary" text @click="deleteItemConfirm">OK</v-btn>
-                        <v-btn outlined color="gray" text @click="closeDelete">Cancel</v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-dialog>
-                </v-toolbar>
+          <modal v-if="showModal">
+            <template v-slot:header>
+              <h3>{{selectedCounty.name}} County</h3>
+            </template>
+            <template v-slot:body>
+              <template v-if="!selectedCounty.alreadySelected && selectedCounties.length >= 5">
+                <p class="red--text">Sorry, you have already selected five counties.  You must remove one before you can add any more.</p>
               </template>
-              <template slot="items" slot-scope="props">
-                <td class="text-xs-right">{{ props.item.name }}</td>
-                <td class="text-xs-right">{{ props.item.state }}</td>
-                <td slot="item.data.expand" class="text-xs-right">{{ props.item.frequency }}</td>
+              <template v-else>
+                <p class="subtitle-1">Frequency</p>
+                <v-divider></v-divider>
+                <v-radio-group v-model="selectedCounty.frequency">
+                  <v-radio value="Daily">
+                    <template v-slot:label>
+                      <div><strong>Daily</strong></div>
+                    </template>
+                  </v-radio>
+                  <v-radio value="Weekly">
+                    <template v-slot:label>
+                      <div><strong>Weekly</strong></div>
+                    </template>
+                  </v-radio>
+                  <v-radio value="Monthly">
+                    <template v-slot:label>
+                      <div><strong>Monthly</strong></div>
+                    </template>
+                  </v-radio>
+                </v-radio-group>
               </template>
-            <template v-slot:item.actions="{ item }">
-              <v-icon small class="mr-2" @click="editItem(item)" >mdi-pencil</v-icon>
-                  &nbsp;&nbsp;&nbsp;
-                  <v-icon small @click="deleteItem(item)">
-                    mdi-delete
-                  </v-icon>
-              </template>
-              </v-data-table>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-               <v-dialog v-model="dialogAccountDelete" max-width="300px">
-                    <v-card>
-                      <v-card-title class="headline">Are you sure?</v-card-title>
-                      <v-card-subtitle><br/>Removing your account is permanent. Select "OK" to remove your subscription or "Cancel" to keep your account.</v-card-subtitle>
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="blue darken-1" text @click="closeAccountDelete">Cancel</v-btn>
-                        <v-btn color="blue darken-1" text @click="deleteAccountConfirm">OK</v-btn>
-                        <v-spacer></v-spacer>
-                      </v-card-actions>
-                    </v-card>
-                  </v-dialog>
-              <p class="subtitle-1">
-                <a href="#" class="removeAccount red--text" @click.prevent="dialogAccountDelete = true"> <v-icon large>mdi-account-remove</v-icon> Unsubscribe and remove your account</a>
-                <span class="red--text" v-if="accountDeleteError"><br/>{{accountDeleteError}}</span>
-              </p>
-            </v-col>
-          </v-row>
+              <v-divider></v-divider>
+            </template>
+            <template v-slot:footer>
+              <v-btn v-if="selectedCounty.alreadySelected || selectedCounties.length < 5" color="blue darken-1" text @click="handleSave">Save</v-btn>
+              <v-btn v-if="selectedCounty.alreadySelected" color="red darken-1" text @click="removeData">Remove</v-btn>
+              <v-btn color="gray darken-1" text @click="closeModal">Cancel</v-btn>
+            </template>
+          </modal>
         </v-container>
-      <v-snackbar v-model="snackbar.show" :color="snackbar.color" :vertical="vertical" :timeout="snackbar.timeout">
-        <a v-if="snackbar.mode === 'SAVE'" @click="SaveData">{{snackbar.saveText}}</a>
-        <span v-else>{{snackbar.confirmedText}}</span>
+      <v-snackbar v-model="showSaveConfirmed" color="success" :timeout="5000">
+        <span>Changes saved!</span>
       </v-snackbar>
   </div>
 </template>
-<style scoped>
- .radio-group-full-width >>>.v-input__control {
-     width: 100%
- }
-</style>
 <script>
 import axios from 'axios';
-import * as am4core from '@amcharts/amcharts4/core';
-import * as am4maps from '@amcharts/amcharts4/maps';
-import usData from '@amcharts/amcharts4-geodata/usaAlbersLow';
-import maData from '@amcharts/amcharts4-geodata/region/usa/maLow';
-import nhData from '@amcharts/amcharts4-geodata/region/usa/nhLow';
-import nyData from '@amcharts/amcharts4-geodata/region/usa/nyLow';
-import vtData from '@amcharts/amcharts4-geodata/region/usa/vtLow';
 import { logout} from '~/modules/utils/session';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import 'leaflet-spin';
+import centroid from '@turf/centroid';
 export default {
   data() {
     return {
-      data: {usa: usData, vt: vtData, ny: nyData, nh: nhData, ma: maData},
-      snackbar: {
-        show: false,
-        timeout: -1,
-        color: 'primary',
-        saveText: 'Tap to save your changes',
-        mode: 'SAVE',
-        confirmedText: 'Saved!'
-      },
+      showSaveConfirmed: false,
+      showModal: false,
+      lastCountyClick: 0,
+      modalOpendedAt: 0,
+      countyLayer: null,
+      countyData: null,
+      mymap: null,
+      bounds: null,
+      featureClickEvents: [],
       dialog: false,
       dialogDelete: false,
-      dialogAccountDelete: false,
-      editedIndex: -1,
-      editedItem: {},
-      defaultItem: {},
+      selectedCounty: {},
       selectedCounties: [],
       origSelectedCounties: [],
       accountDeleteError: null,
@@ -154,106 +85,60 @@ export default {
       ]
     };
   },
-  created() {
-    this.loadData();
-  },
-  mounted() {
-    // const qry = this.$router.currentRoute.query;
-    this.chart = am4core.create(this.$refs.chartdiv, am4maps.MapChart);
-    this.chart.responsive.enabled = true;
-    // Set map definition
-    this.chart.geodata = this.data.usa;
+  async mounted() {
+    /* Load current user's selections from DB */
+    await this.loadData();
 
-    // Set projection
-    this.chart.projection = new am4maps.projections.Albers();
+    /* Load county data for clickable data retrieval */
+    this.countyData = (await axios.get('/js/counties.json')).data;
 
-    // Create map polygon series for the USA Map
-    this.USASeries = this.chart.series.push(new am4maps.MapPolygonSeries());
-    this.USASeries.include = ['US-VT', 'US-MA', 'US-NY', 'US-NH'];
-    // Make map load polygon USA data from GeoJSON
-    this.USASeries.useGeodata = true;
-    // Configure series
-    this.USASeries.mapPolygons.template.tooltipText = '{name}';
-    this.USASeries.mapPolygons.template.fill = am4core.color('#74B266');
-    // Create hover state and set alternative fill color
-    var usaHover = this.USASeries.mapPolygons.template.states.create('hover');
-    usaHover.properties.fill = am4core.color('#367B25');
-    this.stateClickEvent = this.USASeries.mapPolygons.template.events.on('hit',this.stateClick,this);
-    this.chart.homeZoomLevel = 0;
-    this.chart.homeGeoPoint = {
-      latitude: 43.162,
-      longitude: -73.072
-    };
-    this.chart.chartContainer.wheelable = false;
-    this.chart.chartContainer.background.events.disableType('doublehit');
-    this.chart.seriesContainer.events.disableType('doublehit');
+    /* Zoom to current location & set USA map boundaries add event to keep user within bounaries */
+    this.mymap = L.map('map');
 
-    // Create map polygon series for a specific state / hide by default
-    this.StateSeries = this.chart.series.push(new am4maps.MapPolygonSeries());
-    this.StateSeries.calculateVisualCenter = true;
-    this.StateSeries.mapPolygons.template.tooltipText = '{name}';
-    this.StateSeries.mapPolygons.template.fill = am4core.color('#74B266');
-    var stateHover = this.StateSeries.mapPolygons.template.states.create('hover');
-    stateHover.properties.fill = am4core.color('#367B25');
-    this.countyClickEvent = this.StateSeries.mapPolygons.template.events.on('hit',this.countyClick,this);
-    this.StateSeries.hide();
+    /* Start Spinner */
+    this.mymap.spin(true);
 
-    // Add zoomout button
-    this.back = this.chart.createChild(am4core.ZoomOutButton);
-    this.back.align = 'right';
-    this.back.hide();
-    this.backClickEvent = this.back.events.on('hit',this.backClick);
+    /* Setup Leaflet map with MapBox tile layers */
+    L.tileLayer('https://api.mapbox.com/styles/v1/walkerworks/ckiotv7id20z217nv8jnwx9ga/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoid2Fsa2Vyd29ya3MiLCJhIjoiY2tpb3M2YWoyMGo4MTJybXYzcGhjOGFobSJ9.iEmT9oelguTy6h4v0v5tbw',{
+      attribution: 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    }).addTo(this.mymap);
 
-    // Add "watching" icons
-    this.imageSeries = this.chart.series.push(new am4maps.MapImageSeries());
-    var imageSeriesTemplate = this.imageSeries.mapImages.template;
-    this.mapItemClickEvent = imageSeriesTemplate.events.on('hit',this.mapItemClick);
-    var marker = imageSeriesTemplate.createChild(am4core.Image);
-    marker.href = '/i/eye.svg';
-    marker.width = 24;
-    marker.height = 24;
-    marker.nonScaling = true;
-    marker.tooltipText = '{title}';
-    marker.horizontalCenter = 'middle';
-    marker.verticalCenter = 'middle';
+    /* Create a layer container for the GEOJson Counties */
+    this.countyLayer = L.geoJSON(null,{
+      onEachFeature: this.onEachFeature
+    }).addTo(this.mymap);
 
-    // Set property fields
-    imageSeriesTemplate.propertyFields.id = 'countyId';
-    imageSeriesTemplate.propertyFields.latitude = 'latitude';
-    imageSeriesTemplate.propertyFields.longitude = 'longitude';
+    /* Put any preselected counties on the map */
+    this.addSelectedCountiesToMap();
 
-    this.imageSeries.data = this.imageData;
+    /* Precalculate all the centers of the counties */
+    this.precalculateCountyCentroids();
+
+    /* GeoLocate the browser (if possible) */
+    this.mymap.locate({setView: true,maxZoom:8});
+
+    /* Set the map boundaries so the user can't go to, like, Europe */
+    this.setMapBoundaries();
+
+    /* Hook up event handlers for Map & Layers */
+    this.addEventHandlers();
   },
   beforeDestroy() {
-    if (this.chart) {
-      this.chart.dispose();
+    if(this.mymap) {
+      /* Cleanup MAP Event Handlers */
+      this.mymap.off('load', this.mapLoaded);
+      this.mymap.off('locationfound', this.locationFound);
+      this.mymap.off('locationerror',this.locationError );
+      this.mymap.off('moveend', this.moveend);
     }
-    if(this.stateClickEvent) {
-      this.stateClickEvent.dispose();
-    }
-    if(this.backClickEvent) {
-      this.backClickEvent.dispose();
-    }
-    if(this.countyClickEvent) {
-      this.countyClickEvent.dispose();
-    }
-    if(this.mapItemClickEvent) {
-      this.mapItemClickEvent.dispose();
+    /* Cleanup GEO Layer Event Handlers */
+    if(this.countyLayer) {
+      this.countyLayer.eachLayer(l => {
+        l.off('click',this.countyClick);
+      });
     }
   },
   watch: {
-    selectedCounties : {
-      deep: true,
-      handler() {
-        let show = !this.arraysAreSame(this.selectedCounties,this.origSelectedCounties);
-        if(show) {
-          this.snackbar.timeout = -1;
-          this.snackbar.color = 'primary';
-          this.snackbar.mode = 'SAVE';
-        }
-        this.snackbar.show = show;
-      }
-    },
     dialog (val) {
       val || this.close();
     },
@@ -262,6 +147,9 @@ export default {
     },
   },
   methods: {
+    /*
+      Loads the counties the current user has already saved to monitor
+    */
     async loadData() {
       try{
         var response = await axios.get('/api/get-county-data/');
@@ -276,6 +164,191 @@ export default {
         console.log(ex);
       }
     },
+    /*
+      Executes whenever a feautre is added to the county layer
+      Hooks up click handler and determines outline color.
+    */
+    onEachFeature(feature, layer) {
+      layer.on('click',this.countyClick);
+      if(this.selectedCounties.find(c => c.id === feature.properties.GEOID)) {
+        layer.setStyle({color: 'red'});
+      }
+      else {
+        layer.setStyle({color: 'transparent'});
+      }
+    },
+    /*
+    Handles when a user clicks a county
+    */
+    countyClick(ev) {
+      /* This fires twice in rapid succession.  We need to only handle one of those firings -
+      this is a hack to ignore a second trigger within milliseconds */
+      if(this.lastCountyClick !== 0) {
+        let sinceLastClick = Date.now()-this.lastCountyClick;
+        if(sinceLastClick < 100) {
+          return;
+        }
+      }
+      this.lastCountyClick = Date.now();
+      this.openModal(ev.target.feature.properties);
+    },
+    /*
+    Fires when the map has finished loading (stop the spinner!)
+    */
+    mapLoaded() {
+      this.mymap.spin(false);
+    },
+    /*
+    Fires when the user has finished moving the map viewport
+    We'll need to recalculate what it visible
+    */
+    moveend() {
+      /* If the user is zoomed in at 7 or greater - we need to show counties */
+      if(this.mymap.getZoom() >= 7) {
+        /* Remove click events and clear the existing counties on the map first */
+        this.countyLayer.eachLayer(l => {
+          l.off('click',this.countyClick);
+        });
+        this.countyLayer.clearLayers();
+        /* Get the current viewport boundaries from Map (visible map) */
+        let mapBounds = this.mymap.getBounds();
+        /* Go through our counties and see which ones are visible */
+        this.countyData.features.forEach(feature => {
+          /* If it's already a selected county - re-add it to map (in red) */
+          if(this.selectedCounties.find(c => c.id === feature.properties.GEOID)) {
+            this.countyLayer.addData(feature);
+          }
+          /* Otherwise, only add it to map if it's in the visible viewport */
+          else if(mapBounds.contains(feature.center)){
+            this.countyLayer.addData(feature);
+          }
+        });
+      }
+    },
+    /*
+    Hooks up the various event handlers on the Leaflet map.
+    */
+    addEventHandlers() {
+      this.mymap.on('locationfound', this.locationFound);
+      this.mymap.on('locationerror',this.locationError );
+      this.mymap.on('load',this.mapLoaded);
+      this.mymap.on('moveend', this.moveend);
+      this.countyLayer.on('click',this.countyClick);
+    },
+    /*
+    Makes sure the map stays within the United States (Roughly)
+    */
+    setMapBoundaries() {
+      this.mymap.options.minZoom = 5;
+      this.mymap.options.maxZoom = 11;
+      this.bounds = L.latLngBounds(L.latLng(5.499550, -167.276413),  L.latLng(83.162102, -66.233040));
+      this.mymap.setMaxBounds(this.bounds);
+    },
+    /*
+    Adds the County Data in the SelectedCounties array to the
+    map as data features
+    */
+    addSelectedCountiesToMap() {
+      if(this.selectedCounties.length > 0) {
+        this.selectedCounties.forEach(county => {
+          let featureToAdd = this.countyData.features.find(feature => county.id === feature.properties.GEOID);
+          if(featureToAdd) {
+            this.countyLayer.addData(featureToAdd)
+              .on('click',this.countyClick)
+              .setStyle({color: 'red'});
+          }
+        });
+      }
+    },
+    /*
+    Find the center of all the County Polygons
+    so we don't have to look them up on the fly
+    */
+    precalculateCountyCentroids() {
+      this.countyData.features.forEach(feature => {
+        let cntrd = centroid(feature);
+        feature.center = L.latLng([cntrd.geometry.coordinates[1],cntrd.geometry.coordinates[0]]);
+      });
+    },
+    /*
+    Handles an inability to GeoLocate the user.
+    Will default the map to the NorthEast.
+    */
+    locationError() {
+      this.mymap.setView([42, -73], 7);
+    },
+    /*
+    Handles the successful GeoLocation of a user.
+    Ensures it's not in the middle of nowhere (Ocean or Mexico)
+    */
+    locationFound(ev) {
+      let toTheRightOfFlorida = (ev.latlng.lat < 24.2 && ev.latlng.lng < -79.8);
+      let totheLeftOfCaliforniaButNotHawaiiOrAlaska = ((ev.latlng.lat < 51 && ev.latlng.lat > 22) && ev.latlng.lng < -124.7);
+      if( toTheRightOfFlorida || totheLeftOfCaliforniaButNotHawaiiOrAlaska){
+        this.mymap.setView([37, -94], 4);
+      }
+    },
+    /*
+    Handles the saving of an individual county via the modal
+    */
+    async handleSave() {
+      if ((Date.now()-this.modalOpenedAt) < 100) { return; }
+      try{
+        let existing = this.selectedCounties.find(c => c.id === this.selectedCounty.id);
+        if(existing){
+          existing.frequency = this.selectedCounty.frequency;
+        }
+        else {
+          if(this.selectedCounties.length === 5) {
+            return false;
+          }
+          else {
+            this.selectedCounty.alreadySelected = true; // Keeps screen from flashing the "already selected warning"
+            this.selectedCounties.push({id:this.selectedCounty.id, name: this.selectedCounty.name, frequency: this.selectedCounty.frequency});
+            this.countyLayer.eachLayer(layer => {
+              if(layer.feature && layer.feature.properties.GEOID === this.selectedCounty.id) {
+                layer.setStyle({color: 'red'});
+                return;
+              }
+            });
+          }
+        }
+        await this.saveData();
+        this.showModal = false;
+      }
+      catch(ex) {
+        console.log(ex);
+      }
+    },
+    /*
+    Hits the API to persist the users SelectedCounties information
+    */
+    async saveData(){
+      await axios.post('/api/save-counties/',this.selectedCounties);
+      this.showSaveConfirmed = true;
+      this.origSelectedCounties = JSON.parse(JSON.stringify(this.selectedCounties));
+    },
+    async removeData() {
+      if ((Date.now()-this.modalOpenedAt) < 100) { return; }
+      /* Doublecheck it's already a selected county */
+      let existing = this.selectedCounties.find(c => c.id === this.selectedCounty.id);
+      if(existing){
+        /* update the SelectedCounties global array */
+        this.selectedCounties.splice(this.selectedCounties.indexOf(existing), 1);
+        /* Update the map UI to unselect the county from the map */
+        this.countyLayer.eachLayer(layer => {
+          if(layer.feature && layer.feature.properties.GEOID === existing.id) {
+            layer.setStyle({color: 'transparent'});
+          }
+        });
+        /* Save the data */
+        await this.saveData();
+        this.showModal = false;
+      }
+    },
+    /*
+    Helper to determine if two arrays are the same (datawise)
+    */
     arraysAreSame(x, y) {
       if(!x && !y)
         return true;
@@ -292,133 +365,27 @@ export default {
       }
       return objectsAreSame;
     },
-    editItem (item) {
-      this.editedIndex = this.selectedCounties.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialog = true;
+    /*
+    Close the modal and reset the SelectedCounty object
+    */
+    closeModal() {
+      if ((Date.now()-this.modalOpenedAt) < 100) { return; }
+      this.showModal = false;
+      this.selectedCounty = null;
     },
-    deleteItem (item) {
-      this.editedIndex = this.selectedCounties.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
-    },
-    deleteItemConfirm () {
-      let countyId = this.selectedCounties[this.editedIndex].id;
-      if(countyId){
-        this.selectedCounties.splice(this.editedIndex, 1);
-        let dataItem = this.imageSeries.dataItems.values.find(v => v.dataContext.id === countyId);
-        this.imageSeries.dataItems.remove(dataItem);
-      }
-      this.closeDelete();
-    },
-    async deleteAccountConfirm () {
-      try{
-        this.dialogAccountDelete = false;
-        var result = await axios.post('/api/unsubscribe/');
-        if(result.data.success) {
-          logout();
-          return;
-        }
-      }
-      catch(err){console.log(err);}
-      this.accountDeleteError = 'There was an error unsubscribing you. Please try again later';
-    },
-    save () {
-      Object.assign(this.selectedCounties[this.editedIndex], this.editedItem);
-      this.close();
-    },
-    close () {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-    closeDelete () {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-    closeAccountDelete () {
-      this.dialogAccountDelete = false;
-    },
-    backClick() {
-      this.USASeries.show();
-      this.chart.goHome();
-      this.StateSeries.hide();
-      this.back.hide();
-    },
-    mapItemClick(ev) {
-      let countyId = ev.target.id;
-      let existing = this.selectedCounties.find(c => c.id === countyId);
-      if(existing){
-        this.selectedCounties.splice(this.selectedCounties.indexOf(existing), 1);
-        let dataItem = this.imageSeries.dataItems.values.find(v => v.dataContext.id === countyId);
-        this.imageSeries.dataItems.remove(dataItem);
-      }
-    },
-    stateClick(ev) {
-      ev.target.series.chart.zoomToMapObject(ev.target);
-      var stateAbbrev = ev.target.dataItem.dataContext.id.split('-')[1].toUpperCase();
-      this.StateSeries.geodata = this.data[stateAbbrev.toLowerCase()];
-      this.StateSeries.geodataSource.updateCurrentData = true;
-      this.StateSeries.show();
-      this.USASeries.hide();
-      this.back.show();
-      setTimeout(() => {
-        let selectedInThisState = this.selectedCounties.filter(sc => sc.state === stateAbbrev);
-        selectedInThisState.forEach(element => {
-          let exists = this.imageSeries.dataItems.values.find(v => v.dataContext.id === element.id);
-          if(!exists){
-            let poly = this.StateSeries.getPolygonById(element.id);
-            // Add image
-            this.imageSeries.addData({
-              'countyId':element.id,
-              'id':element.id,
-              'latitude':poly.latitude,
-              'longitude':poly.longitude,
-            },0);
-          }
-        });
-      },1000);
-    },
-    countyClick(ev) {
-      let county = ev.target.dataItem.dataContext;
-      let existing = this.selectedCounties.find(c => c.id === county.id );
-      if(existing){
-        this.selectedCounties.splice(this.selectedCounties.indexOf(existing), 1);
-        let dataItem = this.imageSeries.dataItems.values.find(v => v.dataContext.id === county.id );
-        this.imageSeries.dataItems.remove(dataItem);
-      }
-      else {
-        if(this.selectedCounties.length === 5) {
-          return;
-        }
-        else {
-          this.selectedCounties.push({id:county.id,state:county.STATE, name: county.name, frequency: 'Daily'});
-          // Add image
-          this.imageSeries.addData({
-            'countyId':county.id,
-            'id':county.id,
-            'latitude':ev.target.dataItem.mapPolygon.latitude,
-            'longitude':ev.target.dataItem.mapPolygon.longitude,
-          },0);
-        }
-      }
-    },
-    async SaveData() {
-      try{
-        await axios.post('/api/save-counties/',this.selectedCounties);
-        this.snackbar.mode = 'CONFIRMED';
-        this.snackbar.color = 'success';
-        this.snackbar.timeout = 5000;
-        this.origSelectedCounties = JSON.parse(JSON.stringify(this.selectedCounties));
-      }
-      catch(ex) {
-        console.log(ex);
-      }
+    /*
+    Open the modal and initialize the county data options
+    */
+    openModal(info) {
+      let alreadySelected = this.selectedCounties.find(c => c.id === info.GEOID);
+      this.selectedCounty = {
+        id: alreadySelected ? alreadySelected.id : info.GEOID,
+        name: alreadySelected ? alreadySelected.name : info.NAME,
+        frequency: alreadySelected ? alreadySelected.frequency : 'Daily'
+      };
+      this.selectedCounty.alreadySelected = alreadySelected ? true : false;
+      this.modalOpenedAt = Date.now();
+      this.showModal = true;
     },
   }
 };
