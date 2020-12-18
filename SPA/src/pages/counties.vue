@@ -4,7 +4,7 @@
           <v-row>
             <v-col>
               <p class="body-1">
-                Use the map below to select up to 5 counties. Or you may <a href="#">Add/Remove counties manually</a>.
+                Use the map below to select up to 5 counties to monitor. Or you may <a href="#" @click.prevent="$router.push({name: 'CountiesManual'})">Add/Remove counties manually</a>.
               </p>
               <div id="map" ref="leafletMap"></div>
             </v-col>
@@ -71,18 +71,9 @@ export default {
       mymap: null,
       bounds: null,
       featureClickEvents: [],
-      dialog: false,
-      dialogDelete: false,
       selectedCounty: {},
       selectedCounties: [],
       origSelectedCounties: [],
-      accountDeleteError: null,
-      headers: [
-        { text: 'County', value: 'name' },
-        { text: 'State', value: 'state' },
-        { text: 'Frequency', value: 'frequency' },
-        { text: 'Actions', value: 'actions' },
-      ]
     };
   },
   async mounted() {
@@ -138,14 +129,6 @@ export default {
       });
     }
   },
-  watch: {
-    dialog (val) {
-      val || this.close();
-    },
-    dialogDelete (val) {
-      val || this.closeDelete();
-    },
-  },
   methods: {
     /*
       Loads the counties the current user has already saved to monitor
@@ -156,7 +139,6 @@ export default {
         if(response.data && response.data.loggedIn === false){
           logout();
         }
-        this.isDirty = false;
         this.origSelectedCounties = response.data;
         this.selectedCounties = JSON.parse(JSON.stringify(this.origSelectedCounties));
       }

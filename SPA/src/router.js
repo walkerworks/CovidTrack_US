@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import Home from './pages/Home.vue';
 import Feedback from './pages/Feedback.vue';
 import Counties from './pages/Counties.vue';
+import CountiesManual from './pages/counties-manual.vue';
 import { getLocalUser} from '~/modules/utils/session';
 
 
@@ -23,6 +24,12 @@ const router = new Router({
       name: 'Counties',
       component: Counties,
       meta: 'County Selection & Notifications',
+    },
+    {
+      path: '/counties-manual',
+      name: 'CountiesManual',
+      component: CountiesManual,
+      meta: 'Manual County Selection & Notifications',
     },
     {
       path: '/feedback/:feedbackId/:subscriberId',

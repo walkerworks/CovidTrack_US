@@ -210,3 +210,16 @@
   #app .modal-container .theme--light.v-divider  {
       margin:5px 0;
   }
+
+  #app .v-text-field>.v-input__control>.v-input__slot {
+    background-color: transparent;
+    padding: 5px;
+    border: thin solid rgba(0,0,0,.12);
+    border-radius: 5px;
+}
+  #app .manualCounties .v-text-field>.v-input__control>.v-input__slot {
+    padding-right:0px;
+  }
+  #app .manualCounties .v-select__slot {
+    width:100px;
+  }
