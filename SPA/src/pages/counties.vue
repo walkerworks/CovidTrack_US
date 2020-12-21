@@ -41,9 +41,11 @@
               <v-divider></v-divider>
             </template>
             <template v-slot:footer>
-              <v-btn v-if="selectedCounty.alreadySelected || selectedCounties.length < 5" color="blue darken-1" text @click="handleSave">Save</v-btn>
-              <v-btn v-if="selectedCounty.alreadySelected" color="red darken-1" text @click="removeData">Remove</v-btn>
-              <v-btn color="gray darken-1" text @click="closeModal">Cancel</v-btn>
+              <v-card  flat class="d-flex justify-space-around">
+                <v-btn v-if="selectedCounty.alreadySelected || selectedCounties.length < 5" outlined color="info" text @click="handleSave"><v-icon>mdi-content-save-all</v-icon>&nbsp;Save</v-btn>
+                <v-btn v-if="selectedCounty.alreadySelected" color="red" outlined text @click="removeData">Remove</v-btn>
+                <v-btn color="gray" outlined text @click="closeModal">Cancel</v-btn>
+              </v-card>
             </template>
           </modal>
         </v-container>
@@ -221,7 +223,7 @@ export default {
     Makes sure the map stays within the United States (Roughly)
     */
     setMapBoundaries() {
-      this.mymap.options.minZoom = 5;
+     // this.mymap.options.minZoom = 5;
       this.mymap.options.maxZoom = 11;
       this.bounds = L.latLngBounds(L.latLng(5.499550, -167.276413),  L.latLng(83.162102, -66.233040));
       this.mymap.setMaxBounds(this.bounds);

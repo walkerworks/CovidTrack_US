@@ -6,6 +6,7 @@ import globalMixins from './mixins/global-mixins';
 import vuetify from './plugins/vuetify';
 import Popover from 'vue-js-popover';
 import Modal from './components/modal';
+import '../node_modules/vuetify/dist/vuetify.min.css';
 Vue.component('modal', Modal);
 
 Vue.use(Popover);

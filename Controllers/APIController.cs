@@ -341,7 +341,7 @@ namespace CovidTrackUS_Web.Controllers
                     // The existing county FIPS
                     var currentFIPS = currentCounties.Select(cc => cc.FIPS);
 
-                    // Delete the CountySubscriber rows who's County FIPS isn't in the payload FIPS:
+                    // Delete the CountySubscriber rows who's County FIPS aren't in the payload FIPS:
                     var FIPSToDelete = currentFIPS.Where(i => !payloadFIPS.Contains(i)).ToArray();
                     if (FIPSToDelete.Any())
                     {

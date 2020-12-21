@@ -115,6 +115,7 @@
    overflow: inherit;
    text-overflow: inherit;
    max-width:inherit;
+   text-align:left;
 }
 #app .v-text-field.v-input--is-focused .v-label {
   width:100%;
@@ -202,7 +203,7 @@
   }
 
   .modal-body {
-    padding:10px;
+    padding:10px 10px 0;
   }
   #app .modal-body .subtitle-1 {
     margin-top:0;
@@ -211,15 +212,101 @@
       margin:5px 0;
   }
 
+  #app .modal-footer {
+    padding:5px 0;
+  }
+
   #app .v-text-field>.v-input__control>.v-input__slot {
     background-color: transparent;
     padding: 5px;
     border: thin solid rgba(0,0,0,.12);
     border-radius: 5px;
 }
-  #app .manualCounties .v-text-field>.v-input__control>.v-input__slot {
+  #app table .v-text-field>.v-input__control>.v-input__slot {
     padding-right:0px;
   }
-  #app .manualCounties .v-select__slot {
-    width:100px;
+  #app table .v-select__slot,  #app table .v-input__slot {
+    max-width:125px;
   }
+
+  #app a {text-decoration:none;}
+
+  /* Responsive Table */
+  .tbl-responsive {
+    min-width: 300px;
+    width: 100%;
+    height: fit-content;
+    overflow-y: scroll;
+    border-collapse: collapse;
+  }
+  .tbl-responsive thead {
+    color: rgba(0,0,0,.6);
+    font-weight:bold;
+    font-size: .875rem;
+  }
+  .tbl-responsive thead th {
+    padding: 0 0 10px;
+
+  }
+  .tbl-responsive tbody {
+    border: thin solid rgba(0,0,0,.12);
+    color: rgba(0,0,0,.87);
+    font-size: .875rem;
+  }
+  .tbl-responsive tr:hover {
+    background: #eee;
+  }
+  .tbl-responsive tbody tr td {
+    border-bottom: thin solid rgba(0,0,0,.12);
+    padding: 10px;
+  }
+  @media (max-width: 480px) {
+    .tbl-responsive tbody tr td {
+      font-size:1rem;
+    }
+    .tbl-responsive thead {
+      display: none;
+    }
+    .tbl-responsive tbody tr {
+      border-bottom: thin solid rgba(0,0,0,.12);
+    }
+    .tbl-responsive tbody tr td {
+      display: block;
+      border: none;
+      padding:5px 10px;
+    }
+    .tbl-responsive tbody tr td:before{
+      content: attr(data-th) ": ";
+      font-weight: bold;
+      display: inline-block;
+    }
+    .tbl-responsive tbody tr td .v-text-field {
+      margin:0;
+      padding:0;
+    }
+    .tbl-responsive tbody tr td .v-input {
+      display:inline-block;
+      margin-left:10px;
+    }
+
+    .tbl-responsive tbody tr td .v-text-field__details {
+      display:none;
+    }
+    .tbl-responsive tbody tr td .v-input__slot {
+      margin-bottom:0;
+    }
+    .tbl-responsive tbody tr td:last-child {
+      text-align: right;
+    }
+    .tbl-responsive tbody tr td:last-child:before {
+      content: inherit;
+    }
+  }
+
+
+  @media (max-width: 480px) and (min-width: 480px) {
+    .tbl-responsive tbody tr td:before {
+      display: none;
+    }
+  }
+  
