@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CovidTrackUS_Core.Enums;
 using CovidTrackUS_Core.Interfaces;
@@ -16,7 +15,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -31,6 +29,7 @@ namespace CovidTrackUS_Web.Controllers
         private readonly SMSService _smsService;
         private readonly IDataService _dataService;
         private readonly ILogger<APIController> _logger;
+        private readonly ICovidNotifier _notifyService;
 
         /// <summary>
         /// Constructor for <see cref="APIController"/> Handles Services Dependency Injection
@@ -38,12 +37,15 @@ namespace CovidTrackUS_Web.Controllers
         /// <param name="emailService">The injected <see cref="EmailService"/> service</param>
         /// <param name="smsService">The injected <see cref="SMSService"/> service</param>
         /// <param name="dataService">The injected <see cref="IDataService"/> service</param>
-        public APIController(EmailService emailService, SMSService smsService, IDataService dataService, ILogger<APIController> logger)
+        /// <param name="notifyService">The injected <see cref="ICovidNotifier"/> service</param>
+        public APIController(EmailService emailService, SMSService smsService, IDataService dataService, 
+            ILogger<APIController> logger, ICovidNotifier notifyService)
         {
             _emailService = emailService;
             _smsService = smsService;
             _dataService = dataService;
             _logger = logger;
+            _notifyService = notifyService;
         }
 
         /// <summary>
@@ -386,6 +388,37 @@ namespace CovidTrackUS_Web.Controllers
             {
                 _logger.LogError("Message: {0}, Stack: {1}", ex.Message, ex.StackTrace);
                 return new JsonResult(new { error = "Error retrieving county data for subscriber" });
+            }
+        }
+
+        /// <summary>
+        /// Triggers a notification for the currently logged in user
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [Route("notify")]
+        public async Task<JsonResult> TriggerNotification()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(HttpContext?.User?.Identity?.Name))
+                {
+                    DynamicParameters parameters = new DynamicParameters();
+                    parameters.Add("@handle", HttpContext.User.Identity.Name);
+                    var subscriber = await _dataService.QueryFirstOrDefaultAsync<Subscriber>("select * from Subscriber where handle = @handle", parameters);
+                    if (subscriber == null)
+                    {
+                        return new JsonResult(new { error = "Bad user data. User not found." });
+                    }
+                    await _notifyService.Notify(subscriber);
+                    return new JsonResult(new { success = true });
+                }
+                return new JsonResult(new { error = "Bad user data. User not found." });
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Message: {0}, Stack: {1}", ex.Message, ex.StackTrace);
+                return new JsonResult(new { error = "Error sending notification" });
             }
         }
 

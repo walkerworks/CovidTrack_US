@@ -75,9 +75,10 @@ namespace CovidTrackUS_Web
             //DI SMS Sender
             services.AddScoped<ISMSSender, TwillioSMSSender>();
 
-            //DI Email & SMS Services
+            //DI Email & SMS Services & Notifier Service
             services.AddScoped<EmailService, EmailService>();
             services.AddScoped<SMSService, SMSService>();
+            services.AddScoped<ICovidNotifier, CovidNotifier>();
 
             //DI Data Service
             services.AddSingleton<IDataService, DataService>();

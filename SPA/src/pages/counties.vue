@@ -1,62 +1,72 @@
 <template>
   <div>
-        <v-container>
-          <v-row>
-            <v-col>
-              <p class="body-1">
-                Use the map below to select up to 5 counties to monitor. Or you may <a href="#" @click.prevent="$router.push({name: 'CountiesManual'})">Add/Remove counties manually</a>.
-              </p>
-              <div id="map" ref="leafletMap"></div>
-            </v-col>
-          </v-row>
-          <modal v-if="showModal">
-            <template v-slot:header>
-              <h3>{{selectedCounty.name}} County</h3>
-            </template>
-            <template v-slot:body>
-              <template v-if="!selectedCounty.alreadySelected && selectedCounties.length >= 5">
-                <p class="red--text">Sorry, you have already selected five counties.  You must remove one before you can add any more.</p>
-              </template>
-              <template v-else>
-                <p class="subtitle-1">Frequency</p>
-                <v-divider></v-divider>
-                <v-radio-group v-model="selectedCounty.frequency">
-                  <v-radio value="Daily">
-                    <template v-slot:label>
-                      <div><strong>Daily</strong></div>
-                    </template>
-                  </v-radio>
-                  <v-radio value="Weekly">
-                    <template v-slot:label>
-                      <div><strong>Weekly</strong></div>
-                    </template>
-                  </v-radio>
-                  <v-radio value="Monthly">
-                    <template v-slot:label>
-                      <div><strong>Monthly</strong></div>
-                    </template>
-                  </v-radio>
-                </v-radio-group>
-              </template>
-              <v-divider></v-divider>
-            </template>
-            <template v-slot:footer>
-              <v-card  flat class="d-flex justify-space-around">
-                <v-btn v-if="selectedCounty.alreadySelected || selectedCounties.length < 5" outlined color="info" text @click="handleSave"><v-icon>mdi-content-save-all</v-icon>&nbsp;Save</v-btn>
-                <v-btn v-if="selectedCounty.alreadySelected" color="red" outlined text @click="removeData">Remove</v-btn>
-                <v-btn color="gray" outlined text @click="closeModal">Cancel</v-btn>
-              </v-card>
-            </template>
-          </modal>
-        </v-container>
-      <v-snackbar v-model="showSaveConfirmed" color="success" :timeout="5000">
-        <span>Changes saved!</span>
-      </v-snackbar>
+    <v-container>
+      <v-row>
+        <v-col>
+          <p class="body-1">
+            Use the map below to select up to 5 counties to monitor. Or you may <a href="#" @click.prevent="$router.push({name: 'CountiesManual'})">Add/Remove counties manually</a>.
+          </p>
+          <div id="map" ref="leafletMap"></div>
+        </v-col>
+      </v-row>
+      <v-row>
+          <v-col>
+        <template v-if="origSelectedCounties.length > 0">
+            <p></p>
+            <v-card  flat class="d-flex justify-space-around">
+              <v-btn @click="sendNotification" v-if="origSelectedCounties.length > 0" color="warning" outlined text><v-icon>mdi-send</v-icon>&nbsp;{{alertType}} me now</v-btn>
+            </v-card>
+        </template>
+          </v-col>
+        </v-row>
+      <modal v-if="showModal">
+        <template v-slot:header>
+          <h3>{{selectedCounty.name}} County</h3>
+        </template>
+        <template v-slot:body>
+          <template v-if="!selectedCounty.alreadySelected && selectedCounties.length >= 5">
+            <p class="red--text">Sorry, you have already selected five counties.  You must remove one before you can add any more.</p>
+          </template>
+          <template v-else>
+            <p class="subtitle-1">Frequency</p>
+            <v-divider></v-divider>
+            <v-radio-group v-model="selectedCounty.frequency">
+              <v-radio value="Daily">
+                <template v-slot:label>
+                  <div><strong>Daily</strong></div>
+                </template>
+              </v-radio>
+              <v-radio value="Weekly">
+                <template v-slot:label>
+                  <div><strong>Weekly</strong></div>
+                </template>
+              </v-radio>
+              <v-radio value="Monthly">
+                <template v-slot:label>
+                  <div><strong>Monthly</strong></div>
+                </template>
+              </v-radio>
+            </v-radio-group>
+          </template>
+          <v-divider></v-divider>
+        </template>
+        <template v-slot:footer>
+          <v-card  flat class="d-flex justify-space-around">
+            <v-btn v-if="selectedCounty.alreadySelected || selectedCounties.length < 5" outlined color="info" text @click="handleSave"><v-icon>mdi-content-save-all</v-icon>&nbsp;Save</v-btn>
+            <v-btn v-if="selectedCounty.alreadySelected" color="red" outlined text @click="removeData">Remove</v-btn>
+            <v-btn color="gray" outlined text @click="closeModal">Cancel</v-btn>
+          </v-card>
+        </template>
+      </modal>
+    </v-container>
+    <v-snackbar v-model="showSnack" color="success" :timeout="5000">
+      <span>{{snackMessage}}</span>
+    </v-snackbar>
   </div>
 </template>
 <script>
 import axios from 'axios';
-import { logout} from '~/modules/utils/session';
+import { logout,getLocalUser } from '~/modules/utils/session';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import 'leaflet-spin';
@@ -64,7 +74,8 @@ import centroid from '@turf/centroid';
 export default {
   data() {
     return {
-      showSaveConfirmed: false,
+      snackMessage: 'Changes saved!',
+      showSnack: false,
       showModal: false,
       lastCountyClick: 0,
       modalOpendedAt: 0,
@@ -79,6 +90,9 @@ export default {
     };
   },
   async mounted() {
+    /* Is this user a text or email alert */
+    this.alertType = getLocalUser().handle.includes('@') ? 'Email' : 'Text';
+
     /* Load current user's selections from DB */
     await this.loadData();
 
@@ -132,6 +146,23 @@ export default {
     }
   },
   methods: {
+    /* Triggers a notification for the currently logged in user */
+    async sendNotification() {
+      try{
+        const response = await axios.post('/api/notify');
+        if(response && response.data) {
+          if(response.data.success) {
+            this.showSnackbar('Message sent!');
+          }
+          else {
+            this.showSnackbar(response.data.error);
+          }
+        }
+      }
+      catch(ex) {
+        this.showSnackbar('uh oh, that didn\'t work');
+      }
+    },
     /*
       Loads the counties the current user has already saved to monitor
     */
@@ -223,7 +254,6 @@ export default {
     Makes sure the map stays within the United States (Roughly)
     */
     setMapBoundaries() {
-     // this.mymap.options.minZoom = 5;
       this.mymap.options.maxZoom = 11;
       this.bounds = L.latLngBounds(L.latLng(5.499550, -167.276413),  L.latLng(83.162102, -66.233040));
       this.mymap.setMaxBounds(this.bounds);
@@ -304,12 +334,16 @@ export default {
         console.log(ex);
       }
     },
+    showSnackbar(msg) {
+      this.snackMessage = msg;
+      this.showSnack = true;
+    },
     /*
     Hits the API to persist the users SelectedCounties information
     */
     async saveData(){
       await axios.post('/api/save-counties/',this.selectedCounties);
-      this.showSaveConfirmed = true;
+      this.showSnackbar('Changes saved!');
       this.origSelectedCounties = JSON.parse(JSON.stringify(this.selectedCounties));
     },
     async removeData() {
