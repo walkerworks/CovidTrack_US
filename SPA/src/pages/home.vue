@@ -12,7 +12,7 @@
                 You can log-in or sign up with either an email address for email notifications or a full 10 digit phone number if you'd prefer updates via text-message (smart-phone required). We will send a link to the address/phone you enter to log you in.<br/>
               </p>
               <p class="body-1 " v-if=showButton>
-              <v-form ref="form" v-model="valid" lazy-validation >
+              <v-form ref="form" @submit.prevent="SendVerificationLink" v-model="valid" lazy-validation >
                 <v-row>
                   <v-col>
                     <v-text-field
@@ -27,9 +27,9 @@
 
                 <v-btn
                   :disabled="!valid"
+                  type="submit"
                   color="success"
                   class="mr-4"
-                  @click="SendVerificationLink"
                 >Send my log-in link
                 </v-btn>
               </v-form>

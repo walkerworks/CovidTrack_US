@@ -58,6 +58,7 @@
           </v-card>
         </template>
       </modal>
+      {{error}}
     </v-container>
     <v-snackbar v-model="showSnack" color="success" :timeout="5000">
       <span>{{snackMessage}}</span>
@@ -74,6 +75,7 @@ import centroid from '@turf/centroid';
 export default {
   data() {
     return {
+      error: '',
       snackMessage: 'Changes saved!',
       showSnack: false,
       showModal: false,
@@ -90,6 +92,7 @@ export default {
     };
   },
   async mounted() {
+
     /* Is this user a text or email alert */
     this.alertType = getLocalUser().handle.includes('@') ? 'Email' : 'Text';
 
@@ -101,6 +104,9 @@ export default {
 
     /* Zoom to current location & set USA map boundaries add event to keep user within bounaries */
     this.mymap = L.map('map');
+
+    /* Hook up event handlers for Map & Layers */
+    this.addEventHandlers();
 
     /* Start Spinner */
     this.mymap.spin(true);
@@ -114,6 +120,7 @@ export default {
     this.countyLayer = L.geoJSON(null,{
       onEachFeature: this.onEachFeature
     }).addTo(this.mymap);
+    this.countyLayer.on('click',this.countyClick);
 
     /* Put any preselected counties on the map */
     this.addSelectedCountiesToMap();
@@ -126,9 +133,6 @@ export default {
 
     /* Set the map boundaries so the user can't go to, like, Europe */
     this.setMapBoundaries();
-
-    /* Hook up event handlers for Map & Layers */
-    this.addEventHandlers();
   },
   beforeDestroy() {
     if(this.mymap) {
@@ -211,7 +215,7 @@ export default {
     Fires when the map has finished loading (stop the spinner!)
     */
     mapLoaded() {
-      this.mymap.spin(false);
+       this.mymap.spin(false);
     },
     /*
     Fires when the user has finished moving the map viewport
@@ -248,7 +252,6 @@ export default {
       this.mymap.on('locationerror',this.locationError );
       this.mymap.on('load',this.mapLoaded);
       this.mymap.on('moveend', this.moveend);
-      this.countyLayer.on('click',this.countyClick);
     },
     /*
     Makes sure the map stays within the United States (Roughly)
