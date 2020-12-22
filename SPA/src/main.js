@@ -14,7 +14,7 @@ Vue.use(Popover);
 Vue.mixin(globalMixins);
 
 Vue.use(VueAnalytics, {
-  id: 'G-Q0SZL5VSWW',
+  id: 'UA-185971094-1',
   router
 });
 
