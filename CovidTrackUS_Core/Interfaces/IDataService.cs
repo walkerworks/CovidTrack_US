@@ -17,5 +17,6 @@ namespace CovidTrackUS_Core.Interfaces
         Task<int> ExecuteInsertAsync<T>(T objToInsert) where T : CovidTrackDO;
         Task<int> ExecuteInsertAsync<T>(IEnumerable<T> objsToInsert) where T : CovidTrackDO;
         Task<dynamic> QueryMultipleAsync(string qry, IEnumerable<DataItemMap> mapItems = null, DynamicParameters parameters = null);
+        string HashText(string text, byte[] salt);
     }
 }

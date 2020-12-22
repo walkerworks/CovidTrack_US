@@ -57,6 +57,9 @@ namespace CovidTrackUS_Core.Services
             {
                 await SendEmailMessages(subscriber, counties.ToArray());
             }
+            /* Update the notifications */
+            subscriber.Notifications = subscriber.Notifications + 1;
+            await _dataService.ExecuteUpdateAsync(subscriber);
         }
 
 
@@ -131,10 +134,13 @@ namespace CovidTrackUS_Core.Services
                         {
                             log.LogInformation("(updating subscriber last send datetime)");
                             // If send was successful, update the last notified date on the countysubscription
+                            // And increment the subscriber total sends (notifications)
                             foreach (var cs in group)
                             {
                                 cs.LastNotification = DateTime.UtcNow;
                                 await _dataService.ExecuteUpdateAsync(cs);
+                                cs.Subscriber.Notifications = cs.Subscriber.Notifications + 1;
+                                await _dataService.ExecuteUpdateAsync(cs.Subscriber);
                             }
                         }
                     }
@@ -150,10 +156,13 @@ namespace CovidTrackUS_Core.Services
                         {
                             log.LogInformation("(updating subscriber last send datetime)");
                             // If send was successful, update the last notified date on the countysubscription
+                            // And increment the subscriber total sends (notifications)
                             foreach (var cs in group)
                             {
                                 cs.LastNotification = DateTime.UtcNow;
                                 await _dataService.ExecuteUpdateAsync(cs);
+                                cs.Subscriber.Notifications = cs.Subscriber.Notifications + 1;
+                                await _dataService.ExecuteUpdateAsync(cs.Subscriber);
                             }
                         }
                     }

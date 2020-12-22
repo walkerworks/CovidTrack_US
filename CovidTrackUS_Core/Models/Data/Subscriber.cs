@@ -14,7 +14,9 @@ namespace CovidTrackUS_Core.Models.Data
         public string Handle { get; set; }
         public bool Verified { get; set; }
         public HandleType Type { get; set; }
+        public int Notifications { get; set; }
         public DateTime CreatedOn { get; set; }
+        public DateTime? UnsubscribedOn { get; set; }
 
     }
 }

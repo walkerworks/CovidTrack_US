@@ -4,7 +4,9 @@ using CovidTrackUS_Core.Models;
 using CovidTrackUS_Core.Models.Data.TypeHandlers;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Dynamic;
@@ -161,6 +163,23 @@ namespace CovidTrackUS_Core.Services
                 }
                 return data;
             }
+        }
+
+        /// <summary>
+        /// One way hashes a string
+        /// </summary>
+        /// <param name="text">The string to hash</param>
+        /// <param name="salt">The salt to sprinkle over the hash. Yummy.</param>
+        /// <returns>A hashed string</returns>
+        public string HashText(string text, byte[] salt)
+        {
+            // derive a 256-bit subkey (use HMACSHA1 with 10,000 iterations)
+            return Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: text,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA1,
+                iterationCount: 10000,
+                numBytesRequested: 256 / 8));
         }
     }
 }

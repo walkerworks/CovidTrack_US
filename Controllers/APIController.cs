@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using CovidTrackUS_Core.Enums;
 using CovidTrackUS_Core.Interfaces;
@@ -25,6 +26,7 @@ namespace CovidTrackUS_Web.Controllers
     public class APIController : Controller
     {
 
+        private const string RequisiteButInThisCaseUselessSalt = "RequisiteButInThisCaseUselessSalt";
         private readonly EmailService _emailService;
         private readonly SMSService _smsService;
         private readonly IDataService _dataService;
@@ -192,6 +194,7 @@ namespace CovidTrackUS_Web.Controllers
                 {
                     return new BadRequestObjectResult("Invalid login key");
                 }
+                handle = handle.Trim().ToLower();
                 DynamicParameters parameters = new DynamicParameters();
                 parameters.Add("@handle", handle);
                 parameters.Add("@key", key);
@@ -210,17 +213,31 @@ namespace CovidTrackUS_Web.Controllers
 
                     int subscriberId;
                     //Make sure subscriber doesn't exist one more time before adding new one -
-                    var existingSubscriber = await GetSubscriberByHandle(handle.Trim());
+                    var existingSubscriber = await GetSubscriberByHandle(handle);
                     if (existingSubscriber != null)
                     {
                         subscriberId = existingSubscriber.ID;
                     }
                     else
                     {
-                        //Add new subscriber
-                        HandleType type = handle.Contains('@') ? HandleType.Email : HandleType.Phone;
-                        Subscriber sub = new Subscriber() { Handle = handle, Type = type, Verified = true, CreatedOn = DateTime.Now };
-                        subscriberId = await _dataService.ExecuteInsertAsync(sub);
+                        /* Check if this is an unsubscribed user that is resubscribing  - rehash the handle and see if it exists */
+                        var hashedHandle = _dataService.HashText(handle, Encoding.ASCII.GetBytes(RequisiteButInThisCaseUselessSalt));
+                        var existingUnsubscribedSubscriber = await GetSubscriberByHandle(hashedHandle);
+                        /* User is resubscribing.  Remove their unsubscribe date and set the handle back to a valid handle */
+                        if (existingUnsubscribedSubscriber != null)
+                        {
+                            existingUnsubscribedSubscriber.UnsubscribedOn = null;
+                            existingUnsubscribedSubscriber.Handle = handle;
+                            await _dataService.ExecuteUpdateAsync(existingUnsubscribedSubscriber);
+                            subscriberId = existingUnsubscribedSubscriber.ID;
+                        }
+                        else
+                        {
+                            //Add new subscriber
+                            HandleType type = handle.Contains('@') ? HandleType.Email : HandleType.Phone;
+                            Subscriber sub = new Subscriber() { Handle = handle, Type = type, Verified = true, CreatedOn = DateTime.Now };
+                            subscriberId = await _dataService.ExecuteInsertAsync(sub);
+                        }
                     }
 
                     //Log the new subscriber in 
@@ -256,18 +273,32 @@ namespace CovidTrackUS_Web.Controllers
         }
 
         /// <summary>
-        /// Removes/Deletes the currently logged in user from the database
+        /// Removes the currently logged in user from the database
         /// </summary>
+        /// <remarks>
+        /// We don't actually remove the subscriber row, but mark it unsubscribed (remove it's notifications) and one-way hash
+        /// the handle so the user is no longer retrievable
+        /// </remarks>
         [HttpPost("unsubscribe")]
         public async Task<JsonResult> Unsubscribe()
         {
             try
             {
+
                 if (!string.IsNullOrEmpty(HttpContext?.User?.Identity?.Name))
                 {
+                    var handle = HttpContext.User.Identity.Name.Trim().ToLower();
+                    var unsubscribeDate = DateTime.Now;
+                    var salt = Encoding.ASCII.GetBytes(RequisiteButInThisCaseUselessSalt);
+                    var hashedHandle = _dataService.HashText(handle, salt);
                     DynamicParameters parameters = new DynamicParameters();
-                    parameters.Add("@handle", HttpContext.User.Identity.Name);
-                    await _dataService.ExecuteNonQueryAsync("delete from subscriber where handle = @handle", parameters);
+                    parameters.Add("@handle", handle);
+                    parameters.Add("@hashedHandle", hashedHandle);
+                    parameters.Add("@UnsubscribedOn", unsubscribeDate);
+                    await _dataService.ExecuteNonQueryAsync(@"
+                        delete from countysubscriber where subscriberid in (select id from subscriber where handle = @handle)
+                        update subscriber set handle = @hashedHandle, UnsubscribedOn = @UnsubscribedOn where handle = @handle"
+                        , parameters);
                     await HttpContext.SignOutAsync();
                     return new JsonResult(new { success = true });
                 }
