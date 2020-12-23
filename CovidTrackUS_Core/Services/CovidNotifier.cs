@@ -132,7 +132,6 @@ namespace CovidTrackUS_Core.Services
                     {
                         if (await SendSMSMessages(group.Key.Handle, group.Select(g => g.County).ToArray()))
                         {
-                            log.LogInformation("(updating subscriber last send datetime)");
                             // If send was successful, update the last notified date on the countysubscription
                             // And increment the subscriber total sends (notifications)
                             foreach (var cs in group)
@@ -150,11 +149,10 @@ namespace CovidTrackUS_Core.Services
                 if (EmailSubscriptionsDue.Any())
                 {
                     log.LogInformation("Sending Email Messages...");
-                    foreach (var group in SMSSubscriptionsDue)
+                    foreach (var group in EmailSubscriptionsDue)
                     {
                         if (await SendEmailMessages(group.Key, group.Select(g => g.County).ToArray()))
                         {
-                            log.LogInformation("(updating subscriber last send datetime)");
                             // If send was successful, update the last notified date on the countysubscription
                             // And increment the subscriber total sends (notifications)
                             foreach (var cs in group)
