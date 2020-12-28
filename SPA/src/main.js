@@ -9,7 +9,6 @@ import Modal from './components/modal';
 import '../node_modules/vuetify/dist/vuetify.min.css';
 import VueAnalytics from 'vue-analytics';
 Vue.component('modal', Modal);
-
 Vue.use(Popover);
 Vue.mixin(globalMixins);
 

@@ -188,25 +188,38 @@ namespace CovidTrackUS_Core.Services
 #if DEBUG
             ourLink = _smsSettings.LocalShortLink;
 #endif
-
+            var aboutDataLink = _smsSettings.AboutShortLink;
+#if DEBUG
+            aboutDataLink = _smsSettings.LocalAboutShortLink;
+#endif
             smsBuilder.Clear();
-            smsBuilder.AppendLine($"Est. active cases (per million) and % change since last week / two days ago ");
+            smsBuilder.AppendLine($"County");
+            smsBuilder.AppendLine($"-Tot. Confirmed, (7-day/2-day) change");
+            smsBuilder.AppendLine($"-Est. Active (per mil), (7-day/2-day) change");
+            string actPerMil, pctChange, confirmedCases, confirmedChange;
             foreach (var cs in counties)
             {
+                smsBuilder.AppendLine("");
+                smsBuilder.AppendLine("* * * * * * * * *");
+                actPerMil = pctChange = confirmedCases = confirmedChange = "";
+                actPerMil = cs.ActiveCasesTodayPerMillion.HasValue ? cs.ActiveCasesTodayPerMillion.Value.ToString("N0") : "?";
+                pctChange = cs.ActivePastWeekPercentChange.HasValue ? $" {County.IncreaseOrDecreaseBlurb(cs.ActivePastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.ActiveYesterdayPercentChange)}" : " ? / ?";
+
+                actPerMil = cs.ActiveCasesTodayPerMillion.HasValue ? cs.ActiveCasesTodayPerMillion.Value.ToString("N0") : "?";
+                pctChange = cs.ActivePastWeekPercentChange.HasValue ? $" {County.IncreaseOrDecreaseBlurb(cs.ActivePastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.ActiveYesterdayPercentChange)}" : " ? / ?";
+
+                confirmedCases = cs.ConfirmedCases.HasValue ? cs.ConfirmedCases.Value.ToString("N0") : "?";
+                confirmedChange = cs.ConfirmedPastWeekPercentChange.HasValue ? $" {County.IncreaseOrDecreaseBlurb(cs.ConfirmedPastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.ConfirmedYesterdayPercentChange)}" : " ? / ?";
+
+
                 smsBuilder.AppendLine();
-                smsBuilder.Append($"{cs.Name.Replace(" County", "")}, {cs.StateAbbreviation}:");
-                if (cs.ActiveCasesTodayPerMillion.HasValue)
-                {
-                    smsBuilder.Append($" {cs.ActiveCasesTodayPerMillion.Value.ToString("N0")},");
-                }
-                if (cs.PastWeekPercentChange.HasValue)
-                {
-                    smsBuilder.Append($" {County.IncreaseOrDecreaseBlurb(cs.PastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.YesterdayPercentChange)} {Environment.NewLine}");
-                }
+                smsBuilder.AppendLine($"{cs.Name.Replace(" County", "")}, {cs.StateAbbreviation}");
+                smsBuilder.AppendLine($"-{confirmedCases}, {confirmedChange}");
+                smsBuilder.AppendLine($"-{actPerMil}, {pctChange}");
+
             }
             smsBuilder.AppendLine();
-            smsBuilder.AppendLine("Resources: https://bit.ly/2KwG88x");
-            smsBuilder.AppendLine("Heat map: https://bit.ly/3muqA3j");
+            smsBuilder.AppendLine($"About data: {aboutDataLink}");
             smsBuilder.AppendLine($"Manage: {ourLink}");
             return await _smsService.SendMessage(smsHandle, smsBuilder.ToString());
         }

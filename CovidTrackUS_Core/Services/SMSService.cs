@@ -3,7 +3,6 @@ using CovidTrackUS_Core.Interfaces;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using CovidTrackUS_Core.Models.Data;
-using Microsoft.AspNetCore.Http;
 using CovidTrackUS_Core.Models;
 using Microsoft.Extensions.Options;
 using Polly.Retry;
@@ -57,9 +56,9 @@ namespace CovidTrackUS_Core.Services
         {
             if (string.IsNullOrEmpty(phoneDigits)) throw new ArgumentNullException(nameof(phoneDigits));
             LoginKey key = LoginKey.GenerateFor(phoneDigits);
-            await _dataService.ExecuteInsertAsync(key);
             try
             {
+                await _dataService.ExecuteInsertAsync(key);
                 var txt = $"Your login link: https://{_smsSettings.Host}/api/login-with-key/{phoneDigits}/{key.Kee}";
                 return await _retryPolicy.ExecuteAsync(async () => await _smsSender.SendMessageAsync(phoneDigits, _smsSettings.VerificationNumber, txt));
 

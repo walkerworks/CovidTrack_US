@@ -55,5 +55,27 @@ namespace CovidTrackUS_Core.Models
                 return "https://bit.ly/3gsScDC";
             }
         }
+        /// <summary>
+        /// Short link to https://covid-track.us/#/about
+        /// </summary>
+        public string AboutShortLink
+        {
+            get
+            {
+                return "https://bit.ly/2KwYgjj";
+            }
+        }
+
+        /// <summary>
+        /// Short link to https://loc.covid-track.us/#/about
+        /// </summary>
+        public string LocalAboutShortLink
+        {
+            get
+            {
+                return "https://bit.ly/3aTSEdk";
+            }
+        }
+
     }
 }

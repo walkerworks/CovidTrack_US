@@ -25,6 +25,31 @@ namespace CovidTrackUS_Core.Models.Data
         public string State { get; set; }
 
         /// <summary>
+        /// The total confirmed cases yesterday
+        /// </summary>
+        /// <remarks>
+        /// This is actually data from 2 days ago.
+        /// </remarks>
+        public double? ConfirmedCasesYesterday { get; set; }
+
+        /// <summary>
+        /// The total confimed cases for this county.  This is a 
+        /// constantly increasing number day over day.
+        /// </summary>
+        /// <remarks>
+        /// This is actually data from yesterday.  We don't have today's data yet.
+        /// </remarks>
+        public double? ConfirmedCases { get; set; }
+
+        /// <summary>
+        /// The total confimed cases for this county last week.
+        /// </summary>
+        /// <remarks>
+        /// This is actually data from a week ago, yesterday.
+        /// </remarks>
+        public double? ConfirmedCasesLastWeek { get; set; }
+
+        /// <summary>
         /// The active cases as of today
         /// </summary>
         /// <remarks>
@@ -94,11 +119,46 @@ namespace CovidTrackUS_Core.Models.Data
                 return null;
             }
         }
+
+        /// <summary>
+        /// Confirmed case percentage change over the past week (EST)
+        /// </summary>
+        [Computed]
+        public double? ConfirmedPastWeekPercentChange
+        {
+            get
+            {
+                if (!ConfirmedCases.HasValue || !ConfirmedCasesLastWeek.HasValue || ConfirmedCasesLastWeek == 0)
+                {
+                    return null;
+                }
+                return ((ConfirmedCases - ConfirmedCasesLastWeek) / ConfirmedCasesLastWeek) * 100;
+            }
+        }
+
+        /// <summary>
+        /// Confirmed case percentage change from yesterday
+        /// </summary>
+        [Computed]
+        public double? ConfirmedYesterdayPercentChange
+        {
+            get
+            {
+                if (!ConfirmedCases.HasValue || !ConfirmedCasesYesterday.HasValue || ConfirmedCasesYesterday == 0)
+                {
+                    return null;
+                }
+                return ((ConfirmedCases - ConfirmedCasesYesterday) / ConfirmedCasesYesterday) * 100;
+            }
+        }
+
+
+
         /// <summary>
         /// Active case percentage change over the past week (EST)
         /// </summary>
         [Computed]
-        public double? PastWeekPercentChange
+        public double? ActivePastWeekPercentChange
         {
             get
             {
@@ -114,7 +174,7 @@ namespace CovidTrackUS_Core.Models.Data
         /// Active case percentage change from yesterday
         /// </summary>
         [Computed]
-        public double? YesterdayPercentChange
+        public double? ActiveYesterdayPercentChange
         {
             get
             {

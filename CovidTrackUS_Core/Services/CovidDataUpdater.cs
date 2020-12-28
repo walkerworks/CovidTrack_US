@@ -113,11 +113,15 @@ namespace CovidTrackUS_Core.Services
                 finalData.Columns.Add("Active Cases",typeof(double));
                 /* Add last week active cases column to hopkins data */
                 finalData.Columns.Add("Last Week Active Cases", typeof(double));
+                /* Add total confirmed cases column to hopkins data */
+                finalData.Columns.Add("Confirmed Cases", typeof(double));
+                /* Add last week total confirmed cases column to hopkins data */
+                finalData.Columns.Add("Last Week Confirmed Cases", typeof(double));
 
                 /* Variables to be used in row/column interating */
                 int gammaIndex;
                 double countySum;
-
+                int prevDay, currDay;
                 log.LogInformation($"Calculating Active Cases (non-NYC)");
                 /* Loop through each county row  */
                 for (int i = 0; i < finalData.Rows.Count; i++)
@@ -125,12 +129,13 @@ namespace CovidTrackUS_Core.Services
                     // Reset controls for this county
                     gammaIndex = 29;
                     countySum = 0;
+                    prevDay = currDay = 0;
                     /* Iterate through the 30 recent dates we're analyzing for this county, oldest to newest */
                     for (int j = ix_30DaysAgo; j <= ix_Yesterday; j++)
                     {
                         /* Calc active case difference from the day before */
-                        var prevDay = int.Parse(finalData.Rows[i].Field<string>(j - 1));
-                        var currDay = int.Parse(finalData.Rows[i].Field<string>(j));
+                        prevDay = int.Parse(finalData.Rows[i].Field<string>(j - 1));
+                        currDay = int.Parse(finalData.Rows[i].Field<string>(j));
                         prevDay = prevDay < 0 ? 0 : prevDay;
                         currDay = currDay < 0 ? 0 : currDay;
                         var diff = currDay - prevDay;
@@ -140,6 +145,7 @@ namespace CovidTrackUS_Core.Services
                     }
                     // update the Active cases column for the county row (multiple sum by factor)
                     finalData.Rows[i].SetField("Active Cases", (countySum < 0 ? 0 : countySum) * UndetectedFactor);
+                    finalData.Rows[i].SetField("Confirmed Cases", currDay);
                 }
                 log.LogInformation($"- done...");
                 log.LogInformation($"Calculating Last Week's Active Cases (non-NYC)");
@@ -149,12 +155,13 @@ namespace CovidTrackUS_Core.Services
                     // Reset controls for this county
                     gammaIndex = 29;
                     countySum = 0;
+                    prevDay = currDay = 0;
                     /* Iterate through the 30 recent dates we're analyzing for this county, oldest to newest */
                     for (int j = ix_30DaysFromLastWeek; j <= ix_lastWeek; j++)
                     {
                         /* Calc active case difference from the day before */
-                        var prevDay = int.Parse(finalData.Rows[i].Field<string>(j - 1));
-                        var currDay = int.Parse(finalData.Rows[i].Field<string>(j));
+                        prevDay = int.Parse(finalData.Rows[i].Field<string>(j - 1));
+                        currDay = int.Parse(finalData.Rows[i].Field<string>(j));
                         prevDay = prevDay < 0 ? 0 : prevDay;
                         currDay = currDay < 0 ? 0 : currDay;
                         var diff = currDay - prevDay;
@@ -164,10 +171,11 @@ namespace CovidTrackUS_Core.Services
                     }
                     // update the Last Week Active Cases column for the county row (multiple sum by factor)
                     finalData.Rows[i].SetField("Last Week Active Cases", (countySum < 0 ? 0 : countySum) * UndetectedFactor);
+                    finalData.Rows[i].SetField("Last Week Confirmed Cases", currDay);
                 }
                 log.LogInformation($"- done...");
                 // Keep only the columns we need
-                var filterColumns = new[] { "FIPS", "Active Cases", "Last Week Active Cases" };
+                var filterColumns = new[] { "FIPS", "Active Cases", "Last Week Active Cases", "Confirmed Cases", "Last Week Confirmed Cases" };
                 for (int i = finalData.Columns.Count - 1; i >= 0; i--)
                 {
                     if (!filterColumns.Contains(finalData.Columns[i].ColumnName))
@@ -204,11 +212,11 @@ namespace CovidTrackUS_Core.Services
                 }
                 
                 log.LogInformation($"Calculating Active Cases (MA Islands)");
-                IterateOverMaIslandData(typedNYTData.Where(d => d.date >= casesAMonthAgo && d.date <= casesYesterday), finalData, "Active Cases");
+                IterateOverMaIslandData(typedNYTData.Where(d => d.date >= casesAMonthAgo && d.date <= casesYesterday), finalData, "Active Cases", "Confirmed Cases");
                 log.LogInformation($"- done...");
 
                 log.LogInformation($"Calculating Active Cases Last Week (MA Islands)");
-                IterateOverMaIslandData(typedNYTData.Where(d => d.date >= casesAMonthAgoLastWeek && d.date <= casesLastWeek), finalData, "Last Week Active Cases");
+                IterateOverMaIslandData(typedNYTData.Where(d => d.date >= casesAMonthAgoLastWeek && d.date <= casesLastWeek), finalData, "Last Week Active Cases", "Last Week Confirmed Cases");
                 log.LogInformation($"- done...");
 
                 var batchUpdateTime = DateTime.Now;
@@ -225,6 +233,9 @@ namespace CovidTrackUS_Core.Services
                         // Update Active Cases Data
                         if (countyToUpdate != null)
                         {
+                            countyToUpdate.ConfirmedCasesYesterday = countyToUpdate.ConfirmedCases;
+                            countyToUpdate.ConfirmedCases = finalData.Rows[i].Field<double>("Confirmed Cases");
+                            countyToUpdate.ConfirmedCasesLastWeek = finalData.Rows[i].Field<double>("Last Week Confirmed Cases");
                             countyToUpdate.ActiveCasesYesterday = countyToUpdate.ActiveCases;
                             countyToUpdate.ActiveCases = finalData.Rows[i].Field<double>("Active Cases");
                             countyToUpdate.ActiveCasesLastWeek = finalData.Rows[i].Field<double>("Last Week Active Cases");
@@ -238,21 +249,25 @@ namespace CovidTrackUS_Core.Services
                 log.LogInformation($"Finished in {sw.ElapsedMilliseconds} ms");
             }
         }
-        private void IterateOverMaIslandData(IEnumerable<NYTCovidData> typedNYTData, DataTable finalData, string columnToUpdate)
+        private void IterateOverMaIslandData(IEnumerable<NYTCovidData> typedNYTData, DataTable finalData, string estimateCasesColumnToUpdate,string confirmedCasesColumnToUpdate)
         {
+            // Reset controls for this county
+            int gammaIndex = 29;
+            double countySum = 0;
+            int prevDay, currDay, diff;
             //Iterate over island data grouped by County and do the same calculations as before (gamma and factor)
             foreach (var grouping in typedNYTData.GroupBy(d => d.fips))
             {
                 // Reset controls for this county
-                var gammaIndex = 29;
-                double countySum = 0;
-                var prevDay = -1;
+                gammaIndex = 29;
+                countySum = 0;
+                prevDay = currDay = -1;
                 foreach (var group in grouping)
                 {
                     if (prevDay >= 0)
                     {
-                        var currDay = group.cases;
-                        var diff = currDay - prevDay;
+                        currDay = group.cases;
+                        diff = currDay - prevDay;
                         /* Multiply by the proper gamma val and add to the county active case sum */
                         countySum += (diff * gamma[gammaIndex]);
                         gammaIndex--;
@@ -261,7 +276,8 @@ namespace CovidTrackUS_Core.Services
                     prevDay = group.cases;
                 }
                 var updateRow = finalData.Rows.Find(grouping.Key);
-                updateRow.SetField(columnToUpdate, countySum * UndetectedFactor);
+                updateRow.SetField(estimateCasesColumnToUpdate, countySum * UndetectedFactor);
+                updateRow.SetField(confirmedCasesColumnToUpdate, currDay);
             }
         }
 

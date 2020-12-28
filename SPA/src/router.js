@@ -20,6 +20,13 @@ const router = new Router({
       meta: 'Sign up / Log in',
     },
     {
+      path: '/About',
+      name: 'About',
+      component: Home,
+      meta: 'Sign up / Log in',
+      props:true,
+    },
+    {
       path: '/counties',
       name: 'Counties',
       component: Counties,
