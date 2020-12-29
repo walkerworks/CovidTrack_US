@@ -193,14 +193,12 @@ namespace CovidTrackUS_Core.Services
             aboutDataLink = _smsSettings.LocalAboutShortLink;
 #endif
             smsBuilder.Clear();
-            smsBuilder.AppendLine($"County");
-            smsBuilder.AppendLine($"-Tot. Confirmed, (7-day/2-day) change");
-            smsBuilder.AppendLine($"-Est. Active (per mil), (7-day/2-day) change");
+            smsBuilder.AppendLine($"Data presented below:");
+            smsBuilder.AppendLine($"-Total Confirmed, change (7-day/2-day)");
+            smsBuilder.AppendLine($"-Est. Active (per mil), change (7-day/2-day)");
             string actPerMil, pctChange, confirmedCases, confirmedChange;
             foreach (var cs in counties)
             {
-                smsBuilder.AppendLine("");
-                smsBuilder.AppendLine("* * * * * * * * *");
                 actPerMil = pctChange = confirmedCases = confirmedChange = "";
                 actPerMil = cs.ActiveCasesTodayPerMillion.HasValue ? cs.ActiveCasesTodayPerMillion.Value.ToString("N0") : "?";
                 pctChange = cs.ActivePastWeekPercentChange.HasValue ? $" {County.IncreaseOrDecreaseBlurb(cs.ActivePastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.ActiveYesterdayPercentChange)}" : " ? / ?";
@@ -211,16 +209,15 @@ namespace CovidTrackUS_Core.Services
                 confirmedCases = cs.ConfirmedCases.HasValue ? cs.ConfirmedCases.Value.ToString("N0") : "?";
                 confirmedChange = cs.ConfirmedPastWeekPercentChange.HasValue ? $" {County.IncreaseOrDecreaseBlurb(cs.ConfirmedPastWeekPercentChange)} / {County.IncreaseOrDecreaseBlurb(cs.ConfirmedYesterdayPercentChange)}" : " ? / ?";
 
-
                 smsBuilder.AppendLine();
                 smsBuilder.AppendLine($"{cs.Name.Replace(" County", "")}, {cs.StateAbbreviation}");
-                smsBuilder.AppendLine($"-{confirmedCases}, {confirmedChange}");
-                smsBuilder.AppendLine($"-{actPerMil}, {pctChange}");
+                smsBuilder.AppendLine($"{confirmedCases}, {confirmedChange}");
+                smsBuilder.AppendLine($"{actPerMil}, {pctChange}");
 
             }
             smsBuilder.AppendLine();
-            smsBuilder.AppendLine($"About data: {aboutDataLink}");
-            smsBuilder.AppendLine($"Manage: {ourLink}");
+            smsBuilder.AppendLine("Resources: https://bit.ly/2KwG88x");
+            smsBuilder.AppendLine($"Manage/About data: {aboutDataLink}");
             return await _smsService.SendMessage(smsHandle, smsBuilder.ToString());
         }
     }
