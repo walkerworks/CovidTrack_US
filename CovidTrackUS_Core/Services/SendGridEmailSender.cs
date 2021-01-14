@@ -62,7 +62,7 @@ namespace CovidTrackUS_Core.Services
             var from = new EmailAddress(_emailSettings.NotifyAddress, _emailSettings.FriendlyNotify);
             var to = new EmailAddress(subscriber.Handle);
 
-            var templateParameters = getJSONParameters(data);
+            var templateParameters = getJSONParameters(data, subscriber);
             var msg = MailHelper.CreateSingleTemplateEmail(from, to, _emailSettings.NotificationTemplateID, templateParameters);
 
             var response = await client.SendEmailAsync(msg);
@@ -74,9 +74,10 @@ namespace CovidTrackUS_Core.Services
         /// </summary>
         /// <param name="data">An array of <see cref="County"/> objects to build the template variables from.</param>
         /// <returns>A <see cref="NotifyEmailParams"/> object</returns>
-        private object getJSONParameters(County[] data)
+        private object getJSONParameters(County[] data,Subscriber subscriber)
         {
             dynamic parameters = new ExpandoObject();
+            parameters.SUBSCRIBERID = subscriber.ID.ToString();
             parameters.DOMAIN = $"https://{_emailSettings.Host}";
             parameters.ASOFDATE = DateTime.Today.ToString("dddd, MMMM d");
             parameters.NOTIFICATIONS = data.Where(d => d.ActiveCases.HasValue).Select(d => new

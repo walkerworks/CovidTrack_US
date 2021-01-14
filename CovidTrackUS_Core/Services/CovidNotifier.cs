@@ -138,9 +138,9 @@ namespace CovidTrackUS_Core.Services
                             {
                                 cs.LastNotification = DateTime.UtcNow;
                                 await _dataService.ExecuteUpdateAsync(cs);
-                                cs.Subscriber.Notifications = cs.Subscriber.Notifications + 1;
-                                await _dataService.ExecuteUpdateAsync(cs.Subscriber);
                             }
+                            group.Key.Notifications = group.Key.Notifications + 1;
+                            await _dataService.ExecuteUpdateAsync(group.Key);
                         }
                     }
                     log.LogInformation("...Finished SMS Sends");
@@ -159,9 +159,9 @@ namespace CovidTrackUS_Core.Services
                             {
                                 cs.LastNotification = DateTime.UtcNow;
                                 await _dataService.ExecuteUpdateAsync(cs);
-                                cs.Subscriber.Notifications = cs.Subscriber.Notifications + 1;
-                                await _dataService.ExecuteUpdateAsync(cs.Subscriber);
                             }
+                            group.Key.Notifications = group.Key.Notifications + 1;
+                            await _dataService.ExecuteUpdateAsync(group.Key);
                         }
                     }
                     log.LogInformation("...Finished Email Sends");
