@@ -293,3 +293,4 @@ Profiling
 /appsettings.Development.json
 /CovidTrackUS_Jobs/Properties/ServiceDependencies/CovidTrack-US-Jobs - Zip Deploy/profile.arm.json
 /Properties/ServiceDependencies/CovidTrackUs - Web Deploy/profile.arm.json
+/CovidTrack_TEST
