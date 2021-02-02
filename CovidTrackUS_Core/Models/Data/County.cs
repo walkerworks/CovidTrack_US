@@ -197,7 +197,7 @@ namespace CovidTrackUS_Core.Models.Data
             if (displayVal == 0)
                 return "0%";
 
-            return $"{(val.Value > 0 ? "+" : "-")}{displayVal:N0}%";
+            return $"{(displayVal > 0 ? "+" : "")}{displayVal:N0}%";
         }
 
         /// <summary>
