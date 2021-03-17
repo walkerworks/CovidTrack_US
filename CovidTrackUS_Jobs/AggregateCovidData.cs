@@ -17,9 +17,9 @@ namespace CovidTrackUS_Jobs
         /// <summary>
         /// AggregateCovidData
         /// </summary>
-        /// <param name="timer">Runs Every day at 3:00am EST (8am UTC)</param>
+        /// <param name="timer">Runs Every day at 3:00am ET (8am UTC for EST, 7am UTC for EDT)</param>
         /// <returns></returns>
-        public async Task RunAsync([TimerTrigger("0 0 8 * * *")] TimerInfo timer, ILogger log)
+        public async Task RunAsync([TimerTrigger("0 0 7 * * *")] TimerInfo timer, ILogger log)
         {
             log.LogInformation($"*** Starting AggregateCovidData job ***");
             await _updaterService.RetrieveAndCrunch(log);
