@@ -8,5 +8,6 @@ namespace CovidTrackUS_Core.Interfaces
     {
         Task Notify(ILogger log);
         Task Notify(Subscriber subscriber);
+        Task SubscriberReachout(ILogger log);
     }
 }

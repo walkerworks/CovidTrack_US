@@ -50,7 +50,7 @@ namespace CovidTrackUS_Core.Services
         /// Sends a notification email build from the given <see cref="County"> data</see> to 
         /// the provided email addresses.
         /// </summary>
-        /// <param name="emails">Array of email addresses to send notifications to.</param>
+        /// <param name="subscriber"><see cref="Subscriber"/>  to send notifications to.</param>
         /// <param name="data">The <see cref="County"/> to build the email content from.</param>
         /// <returns>Bool as to the success of this call with the EmailService.</returns>
         public async Task<bool> SendNotificationEmailAsync(Subscriber subscriber, County[] data)
@@ -65,6 +65,27 @@ namespace CovidTrackUS_Core.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failure to send notification email {subscriber.Handle}, {ex.Message}, {ex.StackTrace}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Sends a custom email to the given <see cref="Subscriber"/>
+        /// </summary>
+        /// <param name="subscriber"><see cref="Subscriber"/> to send custom email to.</param>
+        /// <returns>Bool as to the success of this call with the EmailService.</returns>
+        public async Task<bool> SendCustomEmailAsync(Subscriber subscriber)
+        {
+            if (subscriber == null) throw new ArgumentNullException(nameof(subscriber));
+
+            try
+            {
+                return await _retryPolicy.ExecuteAsync(async () => await _emailSender.SendCustomEmailAsync(subscriber));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failure to send custom email {subscriber.Handle}, {ex.Message}, {ex.StackTrace}");
                 return false;
             }
         }

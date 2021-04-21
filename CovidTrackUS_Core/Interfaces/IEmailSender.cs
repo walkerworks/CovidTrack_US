@@ -8,6 +8,8 @@ namespace CovidTrackUS_Core.Interfaces
     {
         Task<bool> SendNotificationEmailAsync(Subscriber subscriber, County[] data);
 
+        Task<bool> SendCustomEmailAsync(Subscriber subscriber);
+
         Task<bool> SendLoginKeyEmailAsync(string email, string key);
     }
 }

@@ -84,11 +84,14 @@ namespace CovidTrackUS_Core.Services
                 /* Select Weekly frequencies that are over 10080 minutes (7 days( due. */
                 /* Select Monthly frequencies that are over a calendar month due */
                 var dueNotifications = await _dataService.QueryMultipleAsync(
-                    @"select * into #TempCountySubscribers from CountySubscriber CS where 
-                    (Frequency = 'Daily' and(LastNotification is null or DATEDIFF(day, LastNotification, getdate()) >= 1)) or
-                    (Frequency = 'Weekly' and(LastNotification is null or DATEDIFF(day, LastNotification, getdate()) >= 1)) or
-                    (Frequency = 'Monthly' and(LastNotification is null or (DATEDIFF(month, LastNotification, getdate()) >= 1) and DATEPART(day, getdate()) >= DATEPART(day, LastNotification)))
-
+                    @"select CS.* into #TempCountySubscribers from CountySubscriber CS 
+                        join Subscriber S on S.ID = CS.SubscriberID
+                    where 
+                    S.UnsubscribedOn is null and (
+                        (Frequency = 'Daily' and(LastNotification is null or DATEDIFF(day, LastNotification, getdate()) >= 1)) or
+                        (Frequency = 'Weekly' and(LastNotification is null or DATEDIFF(day, LastNotification, getdate()) >= 1)) or
+                        (Frequency = 'Monthly' and(LastNotification is null or (DATEDIFF(month, LastNotification, getdate()) >= 1) and DATEPART(day, getdate()) >= DATEPART(day, LastNotification)))
+                    )
                     /* Result Set 1 Subscribers */
                     select * from Subscriber where ID in (select SubscriberID from #TempCountySubscribers)
 
@@ -173,6 +176,57 @@ namespace CovidTrackUS_Core.Services
             }
         }
 
+        /// <summary>
+        /// Sends a custom message to all the current <see cref="Subscriber">Subscribers</see>
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public async Task SubscriberReachout(ILogger log)
+        {
+            try
+            {
+                log.LogInformation("Querying DB for Subscribers to be contacted");
+
+                var toContact = await _dataService.FindAsync<Subscriber>("select * from Subscriber where UnsubscribedOn is null");
+
+                /* Separate into types of notifications & group by Subscriber */
+                var SMSSubscriptions = toContact
+                    .Where(s => s.Type == HandleType.Phone)
+                    .Distinct();
+
+                var EmailSubscriptions = toContact
+                    .Where(s => s.Type == HandleType.Email)
+                    .Distinct();
+
+                log.LogInformation($"{toContact.Count()} SMS Subscribers. {toContact.Count()} Email Subscribers");
+
+                //Build and send an SMS to each MS notification subscriber 
+                if (SMSSubscriptions.Any())
+                {
+                    log.LogInformation("Sending Custom SMS Messages...");
+                    foreach (var sub in SMSSubscriptions)
+                    {
+                        await SendCustomSMSMessage(sub);
+                    }
+                    log.LogInformation("...Finished custom SMS Sends");
+                }
+
+                if (EmailSubscriptions.Any())
+                {
+                    log.LogInformation("Sending Custom Email Messages...");
+                    foreach (var sub in EmailSubscriptions)
+                    {
+                        await SendCustomEmailMessage(sub);
+                    }
+                    log.LogInformation("...Finished Custom Email Sends");
+                }
+            }
+            catch (Exception ex)
+            {
+                log.LogError("Custom notification Failure message: {0}  stack: {1}", ex.Message, ex.StackTrace);
+            }
+        }
+
 
         private async Task<bool> SendEmailMessages(Subscriber subscriber, County[] counties)
         {
@@ -220,5 +274,20 @@ namespace CovidTrackUS_Core.Services
             smsBuilder.AppendLine($"Manage/About data: {aboutDataLink}");
             return await _smsService.SendMessage(smsHandle, smsBuilder.ToString());
         }
+
+
+        private async Task<bool> SendCustomSMSMessage(Subscriber subscriber)
+        {
+            StringBuilder smsBuilder = new StringBuilder();
+            smsBuilder.AppendLine("CUSTOM_SMS_MESSAGE");
+            return await _smsService.SendMessage(subscriber.Handle, smsBuilder.ToString());
+        }
+
+        private async Task<bool> SendCustomEmailMessage(Subscriber subscriber)
+        {
+            //Build and send an Email to email notification subscriber 
+            return await _emailService.SendCustomEmailAsync(subscriber);
+        }
+
     }
 }

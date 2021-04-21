@@ -70,6 +70,24 @@ namespace CovidTrackUS_Core.Services
         }
 
         /// <summary>
+        /// Sends a custom email via SendGrid to  the provided <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="subscriber">A <see cref="Subscriber"/> to send notifications to.</param>
+        /// <returns>Bool as to the success of this call with the EmailService.</returns>
+        public async Task<bool> SendCustomEmailAsync(Subscriber subscriber)
+        {
+            var client = new SendGridClient(_emailSettings.ApiKey);
+
+            var from = new EmailAddress(_emailSettings.NotifyAddress, _emailSettings.FriendlyNotify);
+            var to = new EmailAddress(subscriber.Handle);
+
+            var msg = MailHelper.CreateSingleTemplateEmail(from, to, "SET_TO_CUSTOM_TEMPLATE", null);
+
+            var response = await client.SendEmailAsync(msg);
+            return (response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.Accepted);
+        }
+
+        /// <summary>
         /// Build the Dyanmic Email Template variables for the SendGrid template being used for this notification message.
         /// </summary>
         /// <param name="data">An array of <see cref="County"/> objects to build the template variables from.</param>

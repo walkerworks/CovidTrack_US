@@ -146,7 +146,6 @@ namespace CovidTrackUS_Web.Controllers
         /// Adds additional comments to an existing <see cref="SubscriberFeedback"/> object
         /// </summary>
         [HttpPost]
-        [Authorize]
         [Route("feedback/add")]
         public async Task<JsonResult> AddToFeedback([FromBody] JObject form)
         {
